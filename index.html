@@ -2,163 +2,86 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Professional Audio Analyzer</title>
 
 <style>
 *{box-sizing:border-box}
-
 body{
-  margin:0;
-  background:#0b0f14;
-  color:#f5f7fa;
+  margin:0;background:#0b0f14;color:#f5f7fa;
   font-family:Arial,Helvetica,sans-serif
 }
-
-.app{
-  width:min(1500px,100%);
-  margin:0 auto;
-  padding:20px
-}
-
-h1{
-  margin:0 0 16px;
-  font-size:28px
-}
+.app{width:min(1500px,100%);margin:auto;padding:20px}
+h1{margin:0 0 16px;font-size:28px}
+h2{margin:0 0 12px;font-size:18px}
 
 .panel{
-  background:#111820;
-  border:1px solid #26313d;
-  border-radius:10px;
-  padding:16px;
-  margin-top:16px
+  background:#111820;border:1px solid #26313d;
+  border-radius:10px;padding:16px;margin-top:16px
 }
 
-.controls{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  align-items:center
-}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 
 button{
-  background:#1b2733;
-  color:#fff;
-  border:1px solid #344556;
-  border-radius:7px;
-  padding:9px 14px;
-  cursor:pointer
+  background:#1b2733;color:white;border:1px solid #344556;
+  border-radius:7px;padding:9px 14px;cursor:pointer
 }
 
-button:disabled{
-  opacity:.45;
-  cursor:not-allowed
-}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=range]{accent-color:#d8ff4f}
 
-input[type="range"]{
-  accent-color:#d8ff4f
-}
-
-.volume{
-  display:flex;
-  align-items:center;
-  gap:8px
-}
-
-.volume input{
-  width:150px
-}
+.volume{display:flex;align-items:center;gap:8px}
+.volume input{width:150px}
 
 .metrics{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:10px;
-  margin-top:16px
+  gap:10px;margin-top:16px
 }
 
 .metric{
-  background:#0b1118;
-  border:1px solid #202b35;
-  border-radius:8px;
-  padding:10px
+  background:#0b1118;border:1px solid #202b35;
+  border-radius:8px;padding:10px
 }
 
-.metric-label{
-  color:#7f8e9c;
-  font-size:12px;
-  margin-bottom:5px
-}
+.metric-label{color:#7f8e9c;font-size:12px;margin-bottom:5px}
+.metric-value{font-size:17px;font-weight:700}
 
-.metric-value{
-  font-size:17px;
-  font-weight:700
-}
-
-.status{
-  margin-top:12px;
-  color:#91a0ae;
-  font-size:13px
-}
+.status{margin-top:12px;color:#91a0ae;font-size:13px}
 
 .validation{
+  margin-top:12px;padding:12px;background:#0b1118;
+  border:1px solid #202b35;border-radius:8px;
+  color:#9cacba;font-size:13px;line-height:1.75
+}
+
+.validation:empty{display:none}
+.validation-title{color:white;font-weight:700;margin-bottom:5px}
+.pass{color:#b9f66e;font-weight:700}
+.fail{color:#ff7c7c;font-weight:700}
+.info{color:#ffd166}
+
+.diagnostic-note{
   margin-top:12px;
-  padding:12px;
-  background:#0b1118;
-  border:1px solid #202b35;
-  border-radius:8px;
-  color:#9cacba;
-  font-size:13px;
-  line-height:1.75
-}
-
-.validation:empty{
-  display:none
-}
-
-.validation-title{
-  color:#fff;
-  font-weight:700;
-  margin-bottom:5px
-}
-
-.pass{
-  color:#b9f66e;
-  font-weight:700
-}
-
-.fail{
-  color:#ff7c7c;
-  font-weight:700
-}
-
-.info{
-  color:#ffd166
+  font-size:12px;
+  line-height:1.6;
+  color:#81909e
 }
 
 canvas{
-  width:100%;
-  height:520px;
-  display:block;
-  background:#070b10;
-  border-radius:8px
+  width:100%;height:520px;display:block;
+  background:#070b10;border-radius:8px
 }
 
 .transport{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:12px
+  display:flex;align-items:center;gap:12px;margin-top:12px
 }
 
-#seekSlider{
-  flex:1
-}
+#seekSlider{flex:1}
 
 #timeDisplay{
-  min-width:110px;
-  text-align:right;
-  color:#aab6c2;
-  font-size:13px
+  min-width:110px;text-align:right;
+  color:#aab6c2;font-size:13px
 }
 </style>
 </head>
@@ -187,8 +110,8 @@ canvas{
   type="range"
   min="0"
   max="1"
-  value="1"
   step="0.01"
+  value="1"
   disabled
 >
 
@@ -196,7 +119,6 @@ canvas{
 </div>
 
 </div>
-
 
 <div class="metrics">
 
@@ -266,6 +188,63 @@ Load a WAV or MP3 file.
 </div>
 
 
+<!-- DIAGNOSTICS -->
+
+<div class="panel">
+
+<h2>Signal Diagnostics</h2>
+
+<div class="metrics">
+
+<div class="metric">
+<div class="metric-label">DC Offset L</div>
+<div class="metric-value" id="dcOffsetL">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">DC Offset R</div>
+<div class="metric-value" id="dcOffsetR">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Clipped Samples L</div>
+<div class="metric-value" id="clippedL">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Clipped Samples R</div>
+<div class="metric-value" id="clippedR">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Maximum Sample</div>
+<div class="metric-value" id="maximumSample">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Stereo Correlation</div>
+<div class="metric-value" id="correlation">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Stereo Width</div>
+<div class="metric-value" id="stereoWidth">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Mid / Side RMS</div>
+<div class="metric-value" id="midSide">-</div>
+</div>
+
+</div>
+
+<div class="diagnostic-note" id="diagnosticNote">
+Diagnostics are calculated directly from decoded PCM samples and are not affected by playback volume or mute.
+</div>
+
+</div>
+
+
 <div class="panel">
 
 <canvas
@@ -298,6 +277,7 @@ Load a WAV or MP3 file.
 
 <audio id="audioPlayer"></audio>
 
+
 <script>
 
 const WINDOW_SIZE = 32768;
@@ -312,72 +292,56 @@ const DISPLAY_MAX_DB = 0;
 const SWEEP_START_FREQ = 20;
 const SWEEP_END_FREQ = 20000;
 
+const CLIP_THRESHOLD = 1.0;
 
-const fileInput =
-  document.getElementById("audioFile");
 
-const player =
-  document.getElementById("audioPlayer");
+const $ = id =>
+  document.getElementById(id);
 
-const playButton =
-  document.getElementById("playButton");
 
-const pauseButton =
-  document.getElementById("pauseButton");
+const fileInput = $("audioFile");
+const player = $("audioPlayer");
 
-const muteButton =
-  document.getElementById("muteButton");
+const playButton = $("playButton");
+const pauseButton = $("pauseButton");
+const muteButton = $("muteButton");
 
-const volumeSlider =
-  document.getElementById("volumeSlider");
+const volumeSlider = $("volumeSlider");
+const volumeValue = $("volumeValue");
 
-const volumeValue =
-  document.getElementById("volumeValue");
+const seekSlider = $("seekSlider");
+const timeDisplay = $("timeDisplay");
 
-const seekSlider =
-  document.getElementById("seekSlider");
+const statusEl = $("status");
+const validationEl = $("validation");
 
-const timeDisplay =
-  document.getElementById("timeDisplay");
+const sourceSampleRateEl = $("sourceSampleRate");
+const channelsEl = $("channels");
+const nyquistEl = $("nyquist");
+const durationEl = $("duration");
 
-const statusEl =
-  document.getElementById("status");
+const peakLEl = $("peakL");
+const peakREl = $("peakR");
 
-const validationEl =
-  document.getElementById("validation");
+const rmsLEl = $("rmsL");
+const rmsREl = $("rmsR");
 
-const sourceSampleRateEl =
-  document.getElementById("sourceSampleRate");
+const spectrumPeakEl = $("spectrumPeak");
 
-const channelsEl =
-  document.getElementById("channels");
+const dcOffsetLEl = $("dcOffsetL");
+const dcOffsetREl = $("dcOffsetR");
 
-const nyquistEl =
-  document.getElementById("nyquist");
+const clippedLEl = $("clippedL");
+const clippedREl = $("clippedR");
 
-const durationEl =
-  document.getElementById("duration");
+const maximumSampleEl = $("maximumSample");
 
-const peakLEl =
-  document.getElementById("peakL");
+const correlationEl = $("correlation");
+const stereoWidthEl = $("stereoWidth");
+const midSideEl = $("midSide");
 
-const peakREl =
-  document.getElementById("peakR");
-
-const rmsLEl =
-  document.getElementById("rmsL");
-
-const rmsREl =
-  document.getElementById("rmsR");
-
-const spectrumPeakEl =
-  document.getElementById("spectrumPeak");
-
-const canvas =
-  document.getElementById("spectrumCanvas");
-
-const ctx =
-  canvas.getContext("2d");
+const canvas = $("spectrumCanvas");
+const ctx = canvas.getContext("2d");
 
 
 let currentObjectUrl = null;
@@ -528,34 +492,20 @@ function drawGrid(){
 
 
   const frequencies = [
-    20,
-    30,
-    50,
-    100,
-    200,
-    500,
-    1000,
-    2000,
-    5000,
-    10000,
-    20000
+    20,30,50,100,200,500,
+    1000,2000,5000,10000,20000
   ];
 
 
-  ctx.font =
-    "12px Arial";
-
-  ctx.textAlign =
-    "center";
+  ctx.font = "12px Arial";
+  ctx.textAlign = "center";
 
 
-  for(
-    const freq
-    of frequencies
-  ){
+  for(const freq of frequencies){
 
     const x =
       freqToX(freq);
+
 
     ctx.strokeStyle =
       "#1a2530";
@@ -571,10 +521,12 @@ function drawGrid(){
     ctx.fillStyle =
       "#778795";
 
+
     const label =
       freq >= 1000
         ? `${freq / 1000}k`
         : `${freq}`;
+
 
     ctx.fillText(
       label,
@@ -585,29 +537,19 @@ function drawGrid(){
 
 
   const dbMarks = [
-    0,
-    -12,
-    -24,
-    -36,
-    -48,
-    -60,
-    -72,
-    -84,
-    -96
+    0,-12,-24,-36,-48,
+    -60,-72,-84,-96
   ];
 
 
-  ctx.textAlign =
-    "left";
+  ctx.textAlign = "left";
 
 
-  for(
-    const db
-    of dbMarks
-  ){
+  for(const db of dbMarks){
 
     const y =
       dbToY(db);
+
 
     ctx.strokeStyle =
       "#15202a";
@@ -620,6 +562,7 @@ function drawGrid(){
 
     ctx.fillStyle =
       "#677887";
+
 
     ctx.fillText(
       `${db} dB`,
@@ -638,11 +581,7 @@ function calculatePeak(samples){
 
   let peak = 0;
 
-  for(
-    let i = 0;
-    i < samples.length;
-    i++
-  ){
+  for(let i=0;i<samples.length;i++){
 
     const value =
       Math.abs(samples[i]);
@@ -665,24 +604,54 @@ function calculateRms(samples){
 
   let sum = 0;
 
-  for(
-    let i = 0;
-    i < samples.length;
-    i++
-  ){
+  for(let i=0;i<samples.length;i++){
 
     const value =
       samples[i];
 
-    sum +=
-      value *
-      value;
+    sum += value * value;
   }
 
   return Math.sqrt(
     sum /
     samples.length
   );
+}
+
+
+
+function calculateMean(samples){
+
+  if(samples.length === 0){
+    return 0;
+  }
+
+  let sum = 0;
+
+  for(let i=0;i<samples.length;i++){
+    sum += samples[i];
+  }
+
+  return sum / samples.length;
+}
+
+
+
+function countClippedSamples(samples){
+
+  let count = 0;
+
+  for(let i=0;i<samples.length;i++){
+
+    if(
+      Math.abs(samples[i]) >=
+      CLIP_THRESHOLD
+    ){
+      count++;
+    }
+  }
+
+  return count;
 }
 
 
@@ -695,6 +664,7 @@ function buildMono(){
 
   const length =
     channelData[0].length;
+
 
   const output =
     new Float32Array(length);
@@ -710,11 +680,7 @@ function buildMono(){
   }
 
 
-  for(
-    let i = 0;
-    i < length;
-    i++
-  ){
+  for(let i=0;i<length;i++){
 
     output[i] =
       0.5 *
@@ -729,6 +695,368 @@ function buildMono(){
 
 
 
+/*
+  --------------------------------------------------------
+  DIAGNOSTICS
+  --------------------------------------------------------
+*/
+
+function calculateCorrelation(
+  left,
+  right
+){
+
+  const length =
+    Math.min(
+      left.length,
+      right.length
+    );
+
+
+  let sumLR = 0;
+  let sumL2 = 0;
+  let sumR2 = 0;
+
+
+  for(let i=0;i<length;i++){
+
+    const l = left[i];
+    const r = right[i];
+
+    sumLR += l * r;
+    sumL2 += l * l;
+    sumR2 += r * r;
+  }
+
+
+  const denominator =
+    Math.sqrt(
+      sumL2 *
+      sumR2
+    );
+
+
+  if(
+    denominator <= 1e-20
+  ){
+    return null;
+  }
+
+
+  return Math.max(
+    -1,
+    Math.min(
+      1,
+      sumLR /
+      denominator
+    )
+  );
+}
+
+
+
+function calculateMidSide(
+  left,
+  right
+){
+
+  const length =
+    Math.min(
+      left.length,
+      right.length
+    );
+
+
+  let midSquare = 0;
+  let sideSquare = 0;
+
+
+  /*
+    Energy-normalized M/S transform.
+
+    M = (L + R) / sqrt(2)
+    S = (L - R) / sqrt(2)
+
+    This preserves total energy.
+  */
+
+  const scale =
+    1 /
+    Math.sqrt(2);
+
+
+  for(let i=0;i<length;i++){
+
+    const l =
+      left[i];
+
+    const r =
+      right[i];
+
+
+    const mid =
+      (
+        l + r
+      ) *
+      scale;
+
+
+    const side =
+      (
+        l - r
+      ) *
+      scale;
+
+
+    midSquare +=
+      mid *
+      mid;
+
+
+    sideSquare +=
+      side *
+      side;
+  }
+
+
+  const midRms =
+    Math.sqrt(
+      midSquare /
+      length
+    );
+
+
+  const sideRms =
+    Math.sqrt(
+      sideSquare /
+      length
+    );
+
+
+  return {
+    midRms,
+    sideRms
+  };
+}
+
+
+
+function calculateDiagnostics(){
+
+  if(
+    channelData.length === 0
+  ){
+    return;
+  }
+
+
+  const left =
+    channelData[0];
+
+
+  const right =
+    channelData.length > 1
+      ? channelData[1]
+      : null;
+
+
+  const dcL =
+    calculateMean(left);
+
+
+  const clippedL =
+    countClippedSamples(left);
+
+
+  let maximumSample =
+    calculatePeak(left);
+
+
+  dcOffsetLEl.textContent =
+    `${(
+      dcL *
+      100
+    ).toFixed(5)}%`;
+
+
+  clippedLEl.textContent =
+    clippedL.toLocaleString();
+
+
+  /*
+    MONO
+  */
+
+  if(!right){
+
+    dcOffsetREl.textContent =
+      "N/A";
+
+    clippedREl.textContent =
+      "N/A";
+
+    correlationEl.textContent =
+      "N/A (mono)";
+
+    stereoWidthEl.textContent =
+      "N/A (mono)";
+
+    midSideEl.textContent =
+      "N/A (mono)";
+
+
+    maximumSampleEl.textContent =
+      `${formatDb(
+        linearToDb(
+          maximumSample
+        )
+      )}`;
+
+
+    return;
+  }
+
+
+  /*
+    STEREO
+  */
+
+  const dcR =
+    calculateMean(right);
+
+
+  const clippedR =
+    countClippedSamples(right);
+
+
+  maximumSample =
+    Math.max(
+      maximumSample,
+      calculatePeak(right)
+    );
+
+
+  dcOffsetREl.textContent =
+    `${(
+      dcR *
+      100
+    ).toFixed(5)}%`;
+
+
+  clippedREl.textContent =
+    clippedR.toLocaleString();
+
+
+  maximumSampleEl.textContent =
+    formatDb(
+      linearToDb(
+        maximumSample
+      )
+    );
+
+
+  const correlation =
+    calculateCorrelation(
+      left,
+      right
+    );
+
+
+  if(
+    correlation === null
+  ){
+
+    correlationEl.textContent =
+      "N/A";
+  }
+
+  else{
+
+    correlationEl.textContent =
+      correlation.toFixed(4);
+  }
+
+
+  const {
+    midRms,
+    sideRms
+  } =
+    calculateMidSide(
+      left,
+      right
+    );
+
+
+  const midDb =
+    linearToDb(midRms);
+
+
+  const sideDb =
+    linearToDb(sideRms);
+
+
+  midSideEl.textContent =
+    `${midDb.toFixed(2)} / ${sideDb.toFixed(2)} dBFS`;
+
+
+  /*
+    Width metric:
+
+    Side / Mid energy ratio.
+
+    0%:
+    identical mono L/R.
+
+    100%:
+    Side RMS equals Mid RMS.
+
+    >100%:
+    Side energy exceeds Mid energy.
+
+    This is descriptive — not a
+    "good/bad mastering score".
+  */
+
+  if(midRms <= 1e-20){
+
+    if(sideRms > 1e-20){
+
+      stereoWidthEl.textContent =
+        ">100%";
+
+    }
+
+    else{
+
+      stereoWidthEl.textContent =
+        "0%";
+    }
+
+  }
+
+  else{
+
+    const width =
+      (
+        sideRms /
+        midRms
+      ) *
+      100;
+
+
+    stereoWidthEl.textContent =
+      `${width.toFixed(1)}%`;
+  }
+}
+
+
+
+/*
+  --------------------------------------------------------
+  WAV DECODER
+  --------------------------------------------------------
+*/
+
 function parseWav(arrayBuffer){
 
   const view =
@@ -742,11 +1070,7 @@ function parseWav(arrayBuffer){
 
     let result = "";
 
-    for(
-      let i = 0;
-      i < length;
-      i++
-    ){
+    for(let i=0;i<length;i++){
 
       result +=
         String.fromCharCode(
@@ -793,11 +1117,13 @@ function parseWav(arrayBuffer){
         4
       );
 
+
     const chunkSize =
       view.getUint32(
         offset + 4,
         true
       );
+
 
     const chunkDataOffset =
       offset + 8;
@@ -811,17 +1137,20 @@ function parseWav(arrayBuffer){
           true
         );
 
+
       numChannels =
         view.getUint16(
           chunkDataOffset + 2,
           true
         );
 
+
       wavSampleRate =
         view.getUint32(
           chunkDataOffset + 4,
           true
         );
+
 
       bitsPerSample =
         view.getUint16(
@@ -866,9 +1195,11 @@ function parseWav(arrayBuffer){
   const bytesPerSample =
     bitsPerSample / 8;
 
+
   const frameSize =
     bytesPerSample *
     numChannels;
+
 
   const frameCount =
     Math.floor(
@@ -880,7 +1211,8 @@ function parseWav(arrayBuffer){
   const channels =
     Array.from(
       {
-        length:numChannels
+        length:
+          numChannels
       },
 
       () =>
@@ -995,19 +1327,20 @@ function parseWav(arrayBuffer){
 
 
   for(
-    let frame = 0;
-    frame < frameCount;
+    let frame=0;
+    frame<frameCount;
     frame++
   ){
 
     for(
-      let channel = 0;
-      channel < numChannels;
+      let channel=0;
+      channel<numChannels;
       channel++
     ){
 
       channels[channel][frame] =
         readSample(position);
+
 
       position +=
         bytesPerSample;
@@ -1020,14 +1353,11 @@ function parseWav(arrayBuffer){
     sampleRate:
       wavSampleRate,
 
-    channels:
-      channels,
+    channels,
 
-    frameCount:
-      frameCount,
+    frameCount,
 
-    bitsPerSample:
-      bitsPerSample
+    bitsPerSample
 
   };
 }
@@ -1041,6 +1371,7 @@ async function decodeWithBrowser(
   const context =
     new AudioContext();
 
+
   try{
 
     const decoded =
@@ -1048,11 +1379,13 @@ async function decodeWithBrowser(
         arrayBuffer.slice(0)
       );
 
+
     const channels = [];
 
+
     for(
-      let i = 0;
-      i < decoded.numberOfChannels;
+      let i=0;
+      i<decoded.numberOfChannels;
       i++
     ){
 
@@ -1069,13 +1402,13 @@ async function decodeWithBrowser(
       sampleRate:
         decoded.sampleRate,
 
-      channels:
-        channels,
+      channels,
 
       frameCount:
         decoded.length
 
     };
+
   }
 
   finally{
@@ -1085,6 +1418,12 @@ async function decodeWithBrowser(
 }
 
 
+
+/*
+  --------------------------------------------------------
+  FFT
+  --------------------------------------------------------
+*/
 
 function bitReverse(
   real,
@@ -1098,8 +1437,8 @@ function bitReverse(
 
 
   for(
-    let i = 1;
-    i < n;
+    let i=1;
+    i<n;
     i++
   ){
 
@@ -1109,16 +1448,13 @@ function bitReverse(
 
     while(j & bit){
 
-      j ^=
-        bit;
+      j ^= bit;
 
-      bit >>=
-        1;
+      bit >>= 1;
     }
 
 
-    j ^=
-      bit;
+    j ^= bit;
 
 
     if(i < j){
@@ -1126,8 +1462,10 @@ function bitReverse(
       let temp =
         real[i];
 
+
       real[i] =
         real[j];
+
 
       real[j] =
         temp;
@@ -1136,8 +1474,10 @@ function bitReverse(
       temp =
         imag[i];
 
+
       imag[i] =
         imag[j];
+
 
       imag[j] =
         temp;
@@ -1155,6 +1495,7 @@ function fft(
   const n =
     real.length;
 
+
   bitReverse(
     real,
     imag
@@ -1162,30 +1503,33 @@ function fft(
 
 
   for(
-    let length = 2;
-    length <= n;
-    length <<= 1
+    let length=2;
+    length<=n;
+    length<<=1
   ){
 
     const half =
       length >> 1;
+
 
     const angle =
       -2 *
       Math.PI /
       length;
 
+
     const wLengthReal =
       Math.cos(angle);
+
 
     const wLengthImag =
       Math.sin(angle);
 
 
     for(
-      let start = 0;
-      start < n;
-      start += length
+      let start=0;
+      start<n;
+      start+=length
     ){
 
       let wReal = 1;
@@ -1193,13 +1537,14 @@ function fft(
 
 
       for(
-        let j = 0;
-        j < half;
+        let j=0;
+        j<half;
         j++
       ){
 
         const even =
           start + j;
+
 
         const odd =
           even + half;
@@ -1222,6 +1567,7 @@ function fft(
         const evenReal =
           real[even];
 
+
         const evenImag =
           imag[even];
 
@@ -1230,13 +1576,16 @@ function fft(
           evenReal +
           oddReal;
 
+
         imag[even] =
           evenImag +
           oddImag;
 
+
         real[odd] =
           evenReal -
           oddReal;
+
 
         imag[odd] =
           evenImag -
@@ -1259,6 +1608,7 @@ function fft(
 
         wReal =
           nextWReal;
+
 
         wImag =
           nextWImag;
@@ -1331,7 +1681,8 @@ function calculateSpectrum(
     startSample =
       maxStart;
 
-    edgeAdjusted = true;
+    edgeAdjusted =
+      true;
   }
 
 
@@ -1350,6 +1701,7 @@ function calculateSpectrum(
       FFT_SIZE
     );
 
+
   const imag =
     new Float64Array(
       FFT_SIZE
@@ -1360,8 +1712,8 @@ function calculateSpectrum(
 
 
   for(
-    let i = 0;
-    i < WINDOW_SIZE;
+    let i=0;
+    i<WINDOW_SIZE;
     i++
   ){
 
@@ -1379,8 +1731,7 @@ function calculateSpectrum(
       );
 
 
-    windowSum +=
-      window;
+    windowSum += window;
 
 
     const sampleIndex =
@@ -1428,16 +1779,18 @@ function calculateSpectrum(
   let peakDb =
     -Infinity;
 
+
   let peakFrequency =
     0;
+
 
   let peakBin =
     0;
 
 
   for(
-    let k = 1;
-    k < half;
+    let k=1;
+    k<half;
     k++
   ){
 
@@ -1471,6 +1824,7 @@ function calculateSpectrum(
     frequencies[k] =
       frequency;
 
+
     dbValues[k] =
       db;
 
@@ -1485,8 +1839,10 @@ function calculateSpectrum(
       peakDb =
         db;
 
+
       peakFrequency =
         frequency;
+
 
       peakBin =
         k;
@@ -1496,8 +1852,7 @@ function calculateSpectrum(
 
   if(
     peakBin > 1 &&
-    peakBin <
-    half - 1
+    peakBin < half - 1
   ){
 
     const y1 =
@@ -1505,10 +1860,12 @@ function calculateSpectrum(
         peakBin - 1
       ];
 
+
     const y2 =
       dbValues[
         peakBin
       ];
+
 
     const y3 =
       dbValues[
@@ -1607,9 +1964,8 @@ function drawSpectrum(
 
 
   for(
-    let i = 1;
-    i <
-    spectrum.frequencies.length;
+    let i=1;
+    i<spectrum.frequencies.length;
     i++
   ){
 
@@ -1617,12 +1973,18 @@ function drawSpectrum(
       spectrum.frequencies[i];
 
 
-    if(frequency < MIN_FREQ){
+    if(
+      frequency <
+      MIN_FREQ
+    ){
       continue;
     }
 
 
-    if(frequency > MAX_FREQ){
+    if(
+      frequency >
+      MAX_FREQ
+    ){
       break;
     }
 
@@ -1631,7 +1993,9 @@ function drawSpectrum(
       spectrum.dbValues[i];
 
 
-    if(!Number.isFinite(db)){
+    if(
+      !Number.isFinite(db)
+    ){
       continue;
     }
 
@@ -1659,20 +2023,24 @@ function drawSpectrum(
   ctx.strokeStyle =
     "#d8ff4f";
 
+
   ctx.lineWidth = 2;
+
 
   ctx.beginPath();
 
 
-  let started = false;
+  let started =
+    false;
+
 
   let lastValidDb =
     DISPLAY_MIN_DB;
 
 
   for(
-    let x = 0;
-    x < width;
+    let x=0;
+    x<width;
     x++
   ){
 
@@ -1680,7 +2048,9 @@ function drawSpectrum(
       pixelMax[x];
 
 
-    if(!Number.isFinite(db)){
+    if(
+      !Number.isFinite(db)
+    ){
 
       db =
         lastValidDb;
@@ -1704,7 +2074,8 @@ function drawSpectrum(
         y
       );
 
-      started = true;
+      started =
+        true;
     }
 
     else{
@@ -1727,33 +2098,9 @@ function drawSpectrum(
 
 
 /*
-  ==========================================================
-  IMPROVED SWEEP FREQUENCY TRACKER
-  ==========================================================
-
-  Old method:
-  measured period around the target,
-  then treated that period as if it
-  belonged exactly to target time.
-
-  Problem:
-  with a chirp, frequency is moving.
-  At 30–40 Hz one cycle is long enough
-  for this timing offset to matter.
-
-  New method:
-
-  1. Find precise positive zero crossings.
-  2. Each full period is defined by two crossings.
-  3. Frequency = sampleRate / period.
-  4. Assign that frequency measurement to the
-     MIDPOINT in time between those crossings.
-  5. Interpolate between neighboring midpoint
-     measurements at the requested analysis time.
-
-  For logarithmic sweeps we interpolate in
-  log-frequency, which matches exponential
-  frequency movement much better.
+  --------------------------------------------------------
+  SWEEP TRACKER
+  --------------------------------------------------------
 */
 
 function estimateFrequencyFromZeroCrossings(
@@ -1778,11 +2125,6 @@ function estimateFrequencyFromZeroCrossings(
       )
     );
 
-
-  /*
-    Use a wide enough area to guarantee
-    several complete cycles at low frequencies.
-  */
 
   const radius =
     Math.round(
@@ -1815,8 +2157,8 @@ function estimateFrequencyFromZeroCrossings(
 
 
   for(
-    let i = start;
-    i <= end;
+    let i=start;
+    i<=end;
     i++
   ){
 
@@ -1824,6 +2166,7 @@ function estimateFrequencyFromZeroCrossings(
       monoData[
         i - 1
       ];
+
 
     const current =
       monoData[i];
@@ -1849,11 +2192,6 @@ function estimateFrequencyFromZeroCrossings(
         1e-15
       ){
 
-        /*
-          Linear interpolation gives
-          sub-sample zero-crossing position.
-        */
-
         fraction =
           -previous /
           difference;
@@ -1870,107 +2208,77 @@ function estimateFrequencyFromZeroCrossings(
   }
 
 
-  if(crossings.length < 3){
+  if(
+    crossings.length <
+    3
+  ){
     return null;
   }
 
-
-  /*
-    Convert crossing pairs into
-    frequency observations located
-    at PERIOD MIDPOINTS.
-  */
 
   const observations = [];
 
 
   for(
-    let i = 1;
-    i < crossings.length;
+    let i=1;
+    i<crossings.length;
     i++
   ){
 
-    const previousCrossing =
+    const a =
       crossings[
         i - 1
       ];
 
 
-    const currentCrossing =
+    const b =
       crossings[i];
 
 
-    const periodSamples =
-      currentCrossing -
-      previousCrossing;
+    const period =
+      b - a;
 
 
     if(
-      !Number.isFinite(
-        periodSamples
-      ) ||
-      periodSamples <= 0
+      !Number.isFinite(period) ||
+      period <= 0
     ){
       continue;
     }
 
 
-    const frequency =
-      sampleRate /
-      periodSamples;
+    observations.push({
 
+      sample:
+        (
+          a + b
+        ) /
+        2,
 
-    const midpointSample =
-      (
-        previousCrossing +
-        currentCrossing
-      ) /
-      2;
+      frequency:
+        sampleRate /
+        period
 
-
-    if(
-      Number.isFinite(
-        frequency
-      ) &&
-      frequency > 0
-    ){
-
-      observations.push({
-
-        sample:
-          midpointSample,
-
-        frequency:
-          frequency
-
-      });
-    }
+    });
   }
 
 
-  if(observations.length < 2){
+  if(
+    observations.length <
+    2
+  ){
     return null;
   }
 
-
-  /*
-    Find observations surrounding
-    the exact target sample.
-  */
 
   let before = null;
   let after = null;
 
 
   for(
-    let i = 0;
-    i < observations.length;
-    i++
+    const observation
+    of observations
   ){
-
-    const observation =
-      observations[i];
-
 
     if(
       observation.sample <=
@@ -1994,11 +2302,6 @@ function estimateFrequencyFromZeroCrossings(
     }
   }
 
-
-  /*
-    Near file boundaries we may only
-    have measurements on one side.
-  */
 
   if(
     !before &&
@@ -2050,15 +2353,6 @@ function estimateFrequencyFromZeroCrossings(
     );
 
 
-  /*
-    Log interpolation.
-
-    Since our sweep frequency grows
-    exponentially with time, interpolating
-    ln(frequency) is more appropriate
-    than plain linear frequency interpolation.
-  */
-
   const logBefore =
     Math.log(
       before.frequency
@@ -2071,17 +2365,16 @@ function estimateFrequencyFromZeroCrossings(
     );
 
 
-  const interpolatedLog =
+  return Math.exp(
+
     logBefore +
+
     interpolation *
     (
       logAfter -
       logBefore
-    );
+    )
 
-
-  return Math.exp(
-    interpolatedLog
   );
 }
 
@@ -2091,12 +2384,14 @@ function expectedSweepFrequency(
   time
 ){
 
-  if(duration <= 0){
+  if(
+    duration <= 0
+  ){
     return null;
   }
 
 
-  const clampedTime =
+  const t =
     Math.max(
       0,
       Math.min(
@@ -2111,7 +2406,7 @@ function expectedSweepFrequency(
     Math.pow(
       SWEEP_END_FREQ /
       SWEEP_START_FREQ,
-      clampedTime /
+      t /
       duration
     )
   );
@@ -2196,14 +2491,12 @@ function getSteadyToneTest(){
 
 
 
-function passLabel(
-  passed
-){
+function passLabel(passed){
 
   return (
-    `<span class="${passed ? "pass" : "fail"}">
-      ${passed ? "PASS" : "FAIL"}
-    </span>`
+    `<span class="${passed ? "pass" : "fail"}">` +
+    `${passed ? "PASS" : "FAIL"}` +
+    `</span>`
   );
 }
 
@@ -2263,7 +2556,7 @@ function updateValidation(){
     validationEl.innerHTML =
       `
       <div class="validation-title">
-        Calibration — ${steadyTest.frequency} Hz / -18 dBFS
+      Calibration — ${steadyTest.frequency} Hz / -18 dBFS
       </div>
 
       Peak:
@@ -2306,7 +2599,8 @@ function updateValidation(){
       measured ${lastSpectrumResult.peakDb.toFixed(3)} dBFS —
       error ${spectrumError.toFixed(3)} dB —
       ${passLabel(
-        spectrumError <= 0.10
+        spectrumError <=
+        0.10
       )}
       `;
 
@@ -2345,9 +2639,8 @@ function updateValidation(){
       validationEl.innerHTML =
         `
         <div class="validation-title">
-          Log Sweep Tracking
+        Log Sweep Tracking
         </div>
-
         Measurement unavailable at this position.
         `;
 
@@ -2371,11 +2664,11 @@ function updateValidation(){
 
 
     const pass =
-      errorPercent <= 2;
+      errorPercent <=
+      2;
 
 
-    let edgeMessage =
-      "";
+    let edgeMessage = "";
 
 
     if(
@@ -2386,13 +2679,12 @@ function updateValidation(){
       edgeMessage =
         `
         <br>
-
         <span class="info">
-          Edge-safe analysis:
-          requested position is
-          ${lastSpectrumResult.requestedTime.toFixed(3)} s,
-          but the full FFT window is centered at
-          ${analysisTime.toFixed(3)} s.
+        Edge-safe analysis:
+        requested position is
+        ${lastSpectrumResult.requestedTime.toFixed(3)} s,
+        but the full FFT window is centered at
+        ${analysisTime.toFixed(3)} s.
         </span>
         `;
     }
@@ -2401,7 +2693,7 @@ function updateValidation(){
     validationEl.innerHTML =
       `
       <div class="validation-title">
-        Log Sweep Tracking
+      Log Sweep Tracking
       </div>
 
       Requested analysis time:
@@ -2441,13 +2733,13 @@ function updateValidation(){
       <br>
 
       <span class="info">
-        Sweep tracker uses cycle-midpoint timing + log-frequency interpolation.
+      Sweep tracker uses cycle-midpoint timing + log-frequency interpolation.
       </span>
 
       <br>
 
       <span class="info">
-        Sweep amplitude is intentionally not graded as a steady-sine amplitude test.
+      Sweep amplitude is intentionally not graded as a steady-sine amplitude test.
       </span>
       `;
 
@@ -2500,7 +2792,9 @@ function analyzeAtTime(time){
 
 function updateMeasurements(){
 
-  if(channelData.length === 0){
+  if(
+    channelData.length === 0
+  ){
     return;
   }
 
@@ -2711,6 +3005,13 @@ async function loadFile(file){
   updateMeasurements();
 
 
+  /*
+    New diagnostic analysis.
+  */
+
+  calculateDiagnostics();
+
+
   if(currentObjectUrl){
 
     URL.revokeObjectURL(
@@ -2794,12 +3095,16 @@ fileInput.addEventListener(
 
     try{
 
-      await loadFile(file);
+      await loadFile(
+        file
+      );
     }
 
     catch(error){
 
-      console.error(error);
+      console.error(
+        error
+      );
 
 
       statusEl.textContent =
@@ -2825,7 +3130,9 @@ playButton.addEventListener(
 
     catch(error){
 
-      console.error(error);
+      console.error(
+        error
+      );
     }
   }
 );
@@ -2879,7 +3186,8 @@ volumeSlider.addEventListener(
 
     volumeValue.textContent =
       `${Math.round(
-        value * 100
+        value *
+        100
       )}%`;
   }
 );
