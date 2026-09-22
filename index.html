@@ -4,3388 +4,1166 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Professional Audio Analyzer</title>
-
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;background:#0b0f14;color:#f5f7fa;
-  font-family:Arial,Helvetica,sans-serif
-}
+body{margin:0;background:#0b0f14;color:#f5f7fa;font-family:Arial,Helvetica,sans-serif}
 .app{width:min(1500px,100%);margin:auto;padding:20px}
 h1{margin:0 0 16px;font-size:28px}
 h2{margin:0 0 12px;font-size:18px}
-
-.panel{
-  background:#111820;border:1px solid #26313d;
-  border-radius:10px;padding:16px;margin-top:16px
-}
-
+.panel{background:#111820;border:1px solid #26313d;border-radius:10px;padding:16px;margin-top:16px}
 .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-
-button{
-  background:#1b2733;color:white;border:1px solid #344556;
-  border-radius:7px;padding:9px 14px;cursor:pointer
-}
-
+button{background:#1b2733;color:#fff;border:1px solid #344556;border-radius:7px;padding:9px 14px;cursor:pointer}
 button:disabled{opacity:.45;cursor:not-allowed}
 input[type=range]{accent-color:#d8ff4f}
-
-.volume{display:flex;align-items:center;gap:8px}
-.volume input{width:150px}
-
-.metrics{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:10px;margin-top:16px
-}
-
-.metric{
-  background:#0b1118;border:1px solid #202b35;
-  border-radius:8px;padding:10px
-}
-
+.volume{display:flex;align-items:center;gap:8px}.volume input{width:150px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:16px}
+.metric{background:#0b1118;border:1px solid #202b35;border-radius:8px;padding:10px}
 .metric-label{color:#7f8e9c;font-size:12px;margin-bottom:5px}
 .metric-value{font-size:17px;font-weight:700}
-
-.status{margin-top:12px;color:#91a0ae;font-size:13px}
-
-.validation{
-  margin-top:12px;padding:12px;background:#0b1118;
-  border:1px solid #202b35;border-radius:8px;
-  color:#9cacba;font-size:13px;line-height:1.75
-}
-
-.validation:empty{display:none}
-.validation-title{color:white;font-weight:700;margin-bottom:5px}
-.pass{color:#b9f66e;font-weight:700}
-.fail{color:#ff7c7c;font-weight:700}
-.info{color:#ffd166}
-
-.diagnostic-note{
-  margin-top:12px;
-  font-size:12px;
-  line-height:1.6;
-  color:#81909e
-}
-
-canvas{
-  width:100%;height:520px;display:block;
-  background:#070b10;border-radius:8px
-}
-
-.transport{
-  display:flex;align-items:center;gap:12px;margin-top:12px
-}
-
-#seekSlider{flex:1}
-
-#timeDisplay{
-  min-width:110px;text-align:right;
-  color:#aab6c2;font-size:13px
-}
+.status,.note{margin-top:12px;color:#91a0ae;font-size:13px;line-height:1.6}
+.validation{margin-top:12px;padding:12px;background:#0b1118;border:1px solid #202b35;border-radius:8px;color:#9cacba;font-size:13px;line-height:1.75}
+.validation:empty{display:none}.validation-title{color:#fff;font-weight:700;margin-bottom:5px}
+.pass{color:#b9f66e;font-weight:700}.fail{color:#ff7c7c;font-weight:700}.info{color:#ffd166}
+canvas{width:100%;height:520px;display:block;background:#070b10;border-radius:8px}
+.transport{display:flex;align-items:center;gap:12px;margin-top:12px}#seekSlider{flex:1}
+#timeDisplay{min-width:110px;text-align:right;color:#aab6c2;font-size:13px}
 </style>
 </head>
-
 <body>
-
 <div class="app">
-
 <h1>Professional Audio Analyzer</h1>
 
 <div class="panel">
+  <div class="controls">
+    <input id="audioFile" type="file" accept=".wav,.mp3,audio/*">
+    <button id="playButton" disabled>Play</button>
+    <button id="pauseButton" disabled>Pause</button>
+    <button id="muteButton" disabled>Mute</button>
+    <div class="volume">
+      <span>Volume</span>
+      <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="1" disabled>
+      <strong id="volumeValue">100%</strong>
+    </div>
+  </div>
 
-<div class="controls">
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Source Sample Rate</div><div class="metric-value" id="sourceSampleRate">-</div></div>
+    <div class="metric"><div class="metric-label">Channels</div><div class="metric-value" id="channels">-</div></div>
+    <div class="metric"><div class="metric-label">Analysis Window</div><div class="metric-value">32768</div></div>
+    <div class="metric"><div class="metric-label">FFT Transform</div><div class="metric-value">131072</div></div>
+    <div class="metric"><div class="metric-label">Nyquist</div><div class="metric-value" id="nyquist">-</div></div>
+    <div class="metric"><div class="metric-label">Duration</div><div class="metric-value" id="duration">-</div></div>
+    <div class="metric"><div class="metric-label">Peak L</div><div class="metric-value" id="peakL">-</div></div>
+    <div class="metric"><div class="metric-label">Peak R</div><div class="metric-value" id="peakR">-</div></div>
+    <div class="metric"><div class="metric-label">RMS L</div><div class="metric-value" id="rmsL">-</div></div>
+    <div class="metric"><div class="metric-label">RMS R</div><div class="metric-value" id="rmsR">-</div></div>
+    <div class="metric"><div class="metric-label">Spectrum Peak</div><div class="metric-value" id="spectrumPeak">-</div></div>
+  </div>
 
-<input id="audioFile" type="file" accept=".wav,.mp3,audio/*">
-
-<button id="playButton" disabled>Play</button>
-<button id="pauseButton" disabled>Pause</button>
-<button id="muteButton" disabled>Mute</button>
-
-<div class="volume">
-<span>Volume</span>
-
-<input
-  id="volumeSlider"
-  type="range"
-  min="0"
-  max="1"
-  step="0.01"
-  value="1"
-  disabled
->
-
-<strong id="volumeValue">100%</strong>
+  <div class="status" id="status">Load a WAV or MP3 file.</div>
+  <div class="validation" id="validation"></div>
 </div>
-
-</div>
-
-<div class="metrics">
-
-<div class="metric">
-<div class="metric-label">Source Sample Rate</div>
-<div class="metric-value" id="sourceSampleRate">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Channels</div>
-<div class="metric-value" id="channels">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Analysis Window</div>
-<div class="metric-value">32768</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">FFT Transform</div>
-<div class="metric-value">131072</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Nyquist</div>
-<div class="metric-value" id="nyquist">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Duration</div>
-<div class="metric-value" id="duration">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Peak L</div>
-<div class="metric-value" id="peakL">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Peak R</div>
-<div class="metric-value" id="peakR">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">RMS L</div>
-<div class="metric-value" id="rmsL">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">RMS R</div>
-<div class="metric-value" id="rmsR">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Spectrum Peak</div>
-<div class="metric-value" id="spectrumPeak">-</div>
-</div>
-
-</div>
-
-<div class="status" id="status">
-Load a WAV or MP3 file.
-</div>
-
-<div class="validation" id="validation"></div>
-
-</div>
-
-
-<!-- DIAGNOSTICS -->
 
 <div class="panel">
-
-<h2>Signal Diagnostics</h2>
-
-<div class="metrics">
-
-<div class="metric">
-<div class="metric-label">DC Offset L</div>
-<div class="metric-value" id="dcOffsetL">-</div>
+  <h2>Signal Diagnostics</h2>
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">DC Offset L</div><div class="metric-value" id="dcOffsetL">-</div></div>
+    <div class="metric"><div class="metric-label">DC Offset R</div><div class="metric-value" id="dcOffsetR">-</div></div>
+    <div class="metric"><div class="metric-label">Clipped Samples L</div><div class="metric-value" id="clippedL">-</div></div>
+    <div class="metric"><div class="metric-label">Clipped Samples R</div><div class="metric-value" id="clippedR">-</div></div>
+    <div class="metric"><div class="metric-label">Maximum Sample</div><div class="metric-value" id="maximumSample">-</div></div>
+    <div class="metric"><div class="metric-label">Stereo Correlation</div><div class="metric-value" id="correlation">-</div></div>
+    <div class="metric"><div class="metric-label">Stereo Width</div><div class="metric-value" id="stereoWidth">-</div></div>
+    <div class="metric"><div class="metric-label">Mid / Side RMS</div><div class="metric-value" id="midSide">-</div></div>
+  </div>
+  <div class="note">Diagnostics are calculated directly from decoded PCM samples and are not affected by playback volume or mute.</div>
 </div>
-
-<div class="metric">
-<div class="metric-label">DC Offset R</div>
-<div class="metric-value" id="dcOffsetR">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Clipped Samples L</div>
-<div class="metric-value" id="clippedL">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Clipped Samples R</div>
-<div class="metric-value" id="clippedR">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Maximum Sample</div>
-<div class="metric-value" id="maximumSample">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Stereo Correlation</div>
-<div class="metric-value" id="correlation">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Stereo Width</div>
-<div class="metric-value" id="stereoWidth">-</div>
-</div>
-
-<div class="metric">
-<div class="metric-label">Mid / Side RMS</div>
-<div class="metric-value" id="midSide">-</div>
-</div>
-
-</div>
-
-<div class="diagnostic-note" id="diagnosticNote">
-Diagnostics are calculated directly from decoded PCM samples and are not affected by playback volume or mute.
-</div>
-
-</div>
-
 
 <div class="panel">
-
-<canvas
-  id="spectrumCanvas"
-  width="1400"
-  height="520"
-></canvas>
-
-<div class="transport">
-
-<input
-  id="seekSlider"
-  type="range"
-  min="0"
-  max="1"
-  value="0"
-  step="0.001"
-  disabled
->
-
-<div id="timeDisplay">
-0:00 / 0:00
+  <h2>EBU / ITU Loudness</h2>
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Integrated Loudness</div><div class="metric-value" id="integratedLUFS">-</div></div>
+    <div class="metric"><div class="metric-label">Momentary (400 ms)</div><div class="metric-value" id="momentaryLUFS">-</div></div>
+    <div class="metric"><div class="metric-label">Short-Term (3 s)</div><div class="metric-value" id="shortTermLUFS">-</div></div>
+    <div class="metric"><div class="metric-label">Loudness Range</div><div class="metric-value" id="lraLU">-</div></div>
+    <div class="metric"><div class="metric-label">Absolute Gate</div><div class="metric-value">-70 LUFS</div></div>
+    <div class="metric"><div class="metric-label">Integrated Relative Gate</div><div class="metric-value">-10 LU</div></div>
+    <div class="metric"><div class="metric-label">LRA Relative Gate</div><div class="metric-value">-20 LU</div></div>
+    <div class="metric"><div class="metric-label">K-Weighting</div><div class="metric-value" id="kWeightingStatus">-</div></div>
+  </div>
+  <div class="note" id="loudnessNote">
+    ITU-R BS.1770 / EBU Mode loudness core. Momentary and Short-Term are ungated. Integrated uses 400 ms blocks with 75% overlap, -70 LUFS absolute gate and -10 LU relative gate. True Peak is intentionally NOT included in this build yet.
+  </div>
 </div>
 
+<div class="panel">
+  <canvas id="spectrumCanvas" width="1400" height="520"></canvas>
+  <div class="transport">
+    <input id="seekSlider" type="range" min="0" max="1" value="0" step="0.001" disabled>
+    <div id="timeDisplay">0:00 / 0:00</div>
+  </div>
 </div>
-
-</div>
-
 </div>
 
 <audio id="audioPlayer"></audio>
 
-
 <script>
-
 const WINDOW_SIZE = 32768;
 const FFT_SIZE = WINDOW_SIZE * 4;
-
 const MIN_FREQ = 20;
 const MAX_FREQ = 20000;
-
 const DISPLAY_MIN_DB = -100;
 const DISPLAY_MAX_DB = 0;
-
 const SWEEP_START_FREQ = 20;
 const SWEEP_END_FREQ = 20000;
-
 const CLIP_THRESHOLD = 1.0;
+const LOUDNESS_OFFSET = -0.691;
 
-
-const $ = id =>
-  document.getElementById(id);
-
+const $ = id => document.getElementById(id);
 
 const fileInput = $("audioFile");
 const player = $("audioPlayer");
-
 const playButton = $("playButton");
 const pauseButton = $("pauseButton");
 const muteButton = $("muteButton");
-
 const volumeSlider = $("volumeSlider");
 const volumeValue = $("volumeValue");
-
 const seekSlider = $("seekSlider");
 const timeDisplay = $("timeDisplay");
-
 const statusEl = $("status");
 const validationEl = $("validation");
-
 const sourceSampleRateEl = $("sourceSampleRate");
 const channelsEl = $("channels");
 const nyquistEl = $("nyquist");
 const durationEl = $("duration");
-
 const peakLEl = $("peakL");
 const peakREl = $("peakR");
-
 const rmsLEl = $("rmsL");
 const rmsREl = $("rmsR");
-
 const spectrumPeakEl = $("spectrumPeak");
-
 const dcOffsetLEl = $("dcOffsetL");
 const dcOffsetREl = $("dcOffsetR");
-
 const clippedLEl = $("clippedL");
 const clippedREl = $("clippedR");
-
 const maximumSampleEl = $("maximumSample");
-
 const correlationEl = $("correlation");
 const stereoWidthEl = $("stereoWidth");
 const midSideEl = $("midSide");
-
+const integratedLUFSEl = $("integratedLUFS");
+const momentaryLUFSEl = $("momentaryLUFS");
+const shortTermLUFSEl = $("shortTermLUFS");
+const lraLUEl = $("lraLU");
+const kWeightingStatusEl = $("kWeightingStatus");
+const loudnessNoteEl = $("loudnessNote");
 const canvas = $("spectrumCanvas");
 const ctx = canvas.getContext("2d");
 
-
 let currentObjectUrl = null;
-
 let sampleRate = 0;
 let channelData = [];
 let monoData = null;
-
 let duration = 0;
 let muted = false;
-
 let measuredPeakLeft = null;
 let measuredRmsLeft = null;
-
 let lastSpectrumResult = null;
 let lastSpectrumUpdate = 0;
-
 let isScrubbing = false;
 let scrubTimer = null;
 let scrubTargetTime = 0;
+let kWeightedChannels = null;
+let loudnessSupported = false;
 
-
+/* -------------------- helpers -------------------- */
 
 function linearToDb(value){
-
-  if(
-    !Number.isFinite(value) ||
-    value <= 0
-  ){
-    return -Infinity;
-  }
-
+  if(!Number.isFinite(value) || value <= 0) return -Infinity;
   return 20 * Math.log10(value);
 }
 
-
+function powerToLufs(power){
+  if(!Number.isFinite(power) || power <= 0) return -Infinity;
+  return LOUDNESS_OFFSET + 10 * Math.log10(power);
+}
 
 function formatDb(value){
-
-  if(!Number.isFinite(value)){
-    return "-∞ dBFS";
-  }
-
-  return `${value.toFixed(2)} dBFS`;
+  return Number.isFinite(value) ? `${value.toFixed(2)} dBFS` : "-∞ dBFS";
 }
 
-
+function formatLufs(value){
+  return Number.isFinite(value) ? `${value.toFixed(2)} LUFS` : "-∞ LUFS";
+}
 
 function formatTime(seconds){
-
-  if(!Number.isFinite(seconds)){
-    return "0:00";
-  }
-
-  const minutes =
-    Math.floor(seconds / 60);
-
-  const secs =
-    Math.floor(seconds % 60);
-
-  return (
-    minutes +
-    ":" +
-    secs.toString().padStart(2,"0")
-  );
+  if(!Number.isFinite(seconds)) return "0:00";
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return minutes + ":" + secs.toString().padStart(2,"0");
 }
-
-
-
-function freqToX(freq){
-
-  const minLog =
-    Math.log10(MIN_FREQ);
-
-  const maxLog =
-    Math.log10(MAX_FREQ);
-
-  return (
-    (
-      Math.log10(freq) -
-      minLog
-    ) /
-    (
-      maxLog -
-      minLog
-    )
-  ) * canvas.width;
-}
-
-
-
-function dbToY(db){
-
-  const clamped =
-    Math.max(
-      DISPLAY_MIN_DB,
-      Math.min(
-        DISPLAY_MAX_DB,
-        db
-      )
-    );
-
-  const normalized =
-    (
-      clamped -
-      DISPLAY_MIN_DB
-    ) /
-    (
-      DISPLAY_MAX_DB -
-      DISPLAY_MIN_DB
-    );
-
-  return (
-    canvas.height -
-    normalized *
-    canvas.height
-  );
-}
-
-
-
-function drawGrid(){
-
-  const width =
-    canvas.width;
-
-  const height =
-    canvas.height;
-
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  ctx.fillStyle =
-    "#070b10";
-
-  ctx.fillRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  const frequencies = [
-    20,30,50,100,200,500,
-    1000,2000,5000,10000,20000
-  ];
-
-
-  ctx.font = "12px Arial";
-  ctx.textAlign = "center";
-
-
-  for(const freq of frequencies){
-
-    const x =
-      freqToX(freq);
-
-
-    ctx.strokeStyle =
-      "#1a2530";
-
-    ctx.lineWidth = 1;
-
-    ctx.beginPath();
-    ctx.moveTo(x,0);
-    ctx.lineTo(x,height);
-    ctx.stroke();
-
-
-    ctx.fillStyle =
-      "#778795";
-
-
-    const label =
-      freq >= 1000
-        ? `${freq / 1000}k`
-        : `${freq}`;
-
-
-    ctx.fillText(
-      label,
-      x,
-      height - 7
-    );
-  }
-
-
-  const dbMarks = [
-    0,-12,-24,-36,-48,
-    -60,-72,-84,-96
-  ];
-
-
-  ctx.textAlign = "left";
-
-
-  for(const db of dbMarks){
-
-    const y =
-      dbToY(db);
-
-
-    ctx.strokeStyle =
-      "#15202a";
-
-    ctx.beginPath();
-    ctx.moveTo(0,y);
-    ctx.lineTo(width,y);
-    ctx.stroke();
-
-
-    ctx.fillStyle =
-      "#677887";
-
-
-    ctx.fillText(
-      `${db} dB`,
-      6,
-      Math.max(
-        12,
-        y - 4
-      )
-    );
-  }
-}
-
-
 
 function calculatePeak(samples){
-
   let peak = 0;
-
   for(let i=0;i<samples.length;i++){
-
-    const value =
-      Math.abs(samples[i]);
-
-    if(value > peak){
-      peak = value;
-    }
+    const v = Math.abs(samples[i]);
+    if(v > peak) peak = v;
   }
-
   return peak;
 }
 
-
-
 function calculateRms(samples){
-
-  if(samples.length === 0){
-    return 0;
-  }
-
+  if(!samples.length) return 0;
   let sum = 0;
-
-  for(let i=0;i<samples.length;i++){
-
-    const value =
-      samples[i];
-
-    sum += value * value;
-  }
-
-  return Math.sqrt(
-    sum /
-    samples.length
-  );
+  for(let i=0;i<samples.length;i++) sum += samples[i] * samples[i];
+  return Math.sqrt(sum / samples.length);
 }
 
-
-
 function calculateMean(samples){
-
-  if(samples.length === 0){
-    return 0;
-  }
-
+  if(!samples.length) return 0;
   let sum = 0;
-
-  for(let i=0;i<samples.length;i++){
-    sum += samples[i];
-  }
-
+  for(let i=0;i<samples.length;i++) sum += samples[i];
   return sum / samples.length;
 }
 
-
-
 function countClippedSamples(samples){
-
   let count = 0;
-
   for(let i=0;i<samples.length;i++){
-
-    if(
-      Math.abs(samples[i]) >=
-      CLIP_THRESHOLD
-    ){
-      count++;
-    }
+    if(Math.abs(samples[i]) >= CLIP_THRESHOLD) count++;
   }
-
   return count;
 }
 
-
-
 function buildMono(){
-
-  if(channelData.length === 0){
-    return null;
-  }
-
-  const length =
-    channelData[0].length;
-
-
-  const output =
-    new Float32Array(length);
-
+  if(!channelData.length) return null;
+  const length = channelData[0].length;
+  const output = new Float32Array(length);
 
   if(channelData.length === 1){
-
-    output.set(
-      channelData[0]
-    );
-
+    output.set(channelData[0]);
     return output;
   }
 
-
   for(let i=0;i<length;i++){
-
-    output[i] =
-      0.5 *
-      (
-        channelData[0][i] +
-        channelData[1][i]
-      );
+    output[i] = 0.5 * (channelData[0][i] + channelData[1][i]);
   }
-
   return output;
 }
 
+/* -------------------- diagnostics -------------------- */
 
-
-/*
-  --------------------------------------------------------
-  DIAGNOSTICS
-  --------------------------------------------------------
-*/
-
-function calculateCorrelation(
-  left,
-  right
-){
-
-  const length =
-    Math.min(
-      left.length,
-      right.length
-    );
-
-
-  let sumLR = 0;
-  let sumL2 = 0;
-  let sumR2 = 0;
-
-
+function calculateCorrelation(left,right){
+  const length = Math.min(left.length,right.length);
+  let sumLR=0,sumL2=0,sumR2=0;
   for(let i=0;i<length;i++){
-
-    const l = left[i];
-    const r = right[i];
-
-    sumLR += l * r;
-    sumL2 += l * l;
-    sumR2 += r * r;
+    const l=left[i], r=right[i];
+    sumLR += l*r;
+    sumL2 += l*l;
+    sumR2 += r*r;
   }
-
-
-  const denominator =
-    Math.sqrt(
-      sumL2 *
-      sumR2
-    );
-
-
-  if(
-    denominator <= 1e-20
-  ){
-    return null;
-  }
-
-
-  return Math.max(
-    -1,
-    Math.min(
-      1,
-      sumLR /
-      denominator
-    )
-  );
+  const den = Math.sqrt(sumL2*sumR2);
+  if(den <= 1e-20) return null;
+  return Math.max(-1,Math.min(1,sumLR/den));
 }
 
-
-
-function calculateMidSide(
-  left,
-  right
-){
-
-  const length =
-    Math.min(
-      left.length,
-      right.length
-    );
-
-
-  let midSquare = 0;
-  let sideSquare = 0;
-
-
-  /*
-    Energy-normalized M/S transform.
-
-    M = (L + R) / sqrt(2)
-    S = (L - R) / sqrt(2)
-
-    This preserves total energy.
-  */
-
-  const scale =
-    1 /
-    Math.sqrt(2);
-
+function calculateMidSide(left,right){
+  const length = Math.min(left.length,right.length);
+  let midSquare=0,sideSquare=0;
+  const scale = 1/Math.sqrt(2);
 
   for(let i=0;i<length;i++){
-
-    const l =
-      left[i];
-
-    const r =
-      right[i];
-
-
-    const mid =
-      (
-        l + r
-      ) *
-      scale;
-
-
-    const side =
-      (
-        l - r
-      ) *
-      scale;
-
-
-    midSquare +=
-      mid *
-      mid;
-
-
-    sideSquare +=
-      side *
-      side;
+    const mid=(left[i]+right[i])*scale;
+    const side=(left[i]-right[i])*scale;
+    midSquare += mid*mid;
+    sideSquare += side*side;
   }
 
-
-  const midRms =
-    Math.sqrt(
-      midSquare /
-      length
-    );
-
-
-  const sideRms =
-    Math.sqrt(
-      sideSquare /
-      length
-    );
-
-
   return {
-    midRms,
-    sideRms
+    midRms:Math.sqrt(midSquare/length),
+    sideRms:Math.sqrt(sideSquare/length)
   };
 }
 
-
-
 function calculateDiagnostics(){
+  if(!channelData.length) return;
 
-  if(
-    channelData.length === 0
-  ){
-    return;
-  }
+  const left = channelData[0];
+  const right = channelData.length > 1 ? channelData[1] : null;
 
+  const dcL = calculateMean(left);
+  const clippedL = countClippedSamples(left);
+  let maxSample = calculatePeak(left);
 
-  const left =
-    channelData[0];
-
-
-  const right =
-    channelData.length > 1
-      ? channelData[1]
-      : null;
-
-
-  const dcL =
-    calculateMean(left);
-
-
-  const clippedL =
-    countClippedSamples(left);
-
-
-  let maximumSample =
-    calculatePeak(left);
-
-
-  dcOffsetLEl.textContent =
-    `${(
-      dcL *
-      100
-    ).toFixed(5)}%`;
-
-
-  clippedLEl.textContent =
-    clippedL.toLocaleString();
-
-
-  /*
-    MONO
-  */
+  dcOffsetLEl.textContent = `${(dcL*100).toFixed(5)}%`;
+  clippedLEl.textContent = clippedL.toLocaleString();
 
   if(!right){
-
-    dcOffsetREl.textContent =
-      "N/A";
-
-    clippedREl.textContent =
-      "N/A";
-
-    correlationEl.textContent =
-      "N/A (mono)";
-
-    stereoWidthEl.textContent =
-      "N/A (mono)";
-
-    midSideEl.textContent =
-      "N/A (mono)";
-
-
-    maximumSampleEl.textContent =
-      `${formatDb(
-        linearToDb(
-          maximumSample
-        )
-      )}`;
-
-
+    dcOffsetREl.textContent = "N/A";
+    clippedREl.textContent = "N/A";
+    correlationEl.textContent = "N/A (mono)";
+    stereoWidthEl.textContent = "N/A (mono)";
+    midSideEl.textContent = "N/A (mono)";
+    maximumSampleEl.textContent = formatDb(linearToDb(maxSample));
     return;
   }
 
+  const dcR = calculateMean(right);
+  const clippedR = countClippedSamples(right);
+  maxSample = Math.max(maxSample,calculatePeak(right));
 
-  /*
-    STEREO
-  */
+  dcOffsetREl.textContent = `${(dcR*100).toFixed(5)}%`;
+  clippedREl.textContent = clippedR.toLocaleString();
+  maximumSampleEl.textContent = formatDb(linearToDb(maxSample));
 
-  const dcR =
-    calculateMean(right);
+  const corr = calculateCorrelation(left,right);
+  correlationEl.textContent = corr === null ? "N/A" : corr.toFixed(4);
 
-
-  const clippedR =
-    countClippedSamples(right);
-
-
-  maximumSample =
-    Math.max(
-      maximumSample,
-      calculatePeak(right)
-    );
-
-
-  dcOffsetREl.textContent =
-    `${(
-      dcR *
-      100
-    ).toFixed(5)}%`;
-
-
-  clippedREl.textContent =
-    clippedR.toLocaleString();
-
-
-  maximumSampleEl.textContent =
-    formatDb(
-      linearToDb(
-        maximumSample
-      )
-    );
-
-
-  const correlation =
-    calculateCorrelation(
-      left,
-      right
-    );
-
-
-  if(
-    correlation === null
-  ){
-
-    correlationEl.textContent =
-      "N/A";
-  }
-
-  else{
-
-    correlationEl.textContent =
-      correlation.toFixed(4);
-  }
-
-
-  const {
-    midRms,
-    sideRms
-  } =
-    calculateMidSide(
-      left,
-      right
-    );
-
-
-  const midDb =
-    linearToDb(midRms);
-
-
-  const sideDb =
-    linearToDb(sideRms);
-
-
-  midSideEl.textContent =
-    `${midDb.toFixed(2)} / ${sideDb.toFixed(2)} dBFS`;
-
-
-  /*
-    Width metric:
-
-    Side / Mid energy ratio.
-
-    0%:
-    identical mono L/R.
-
-    100%:
-    Side RMS equals Mid RMS.
-
-    >100%:
-    Side energy exceeds Mid energy.
-
-    This is descriptive — not a
-    "good/bad mastering score".
-  */
+  const {midRms,sideRms} = calculateMidSide(left,right);
+  const midDb = linearToDb(midRms);
+  const sideDb = linearToDb(sideRms);
+  midSideEl.textContent = `${Number.isFinite(midDb)?midDb.toFixed(2):"-Infinity"} / ${Number.isFinite(sideDb)?sideDb.toFixed(2):"-Infinity"} dBFS`;
 
   if(midRms <= 1e-20){
-
-    if(sideRms > 1e-20){
-
-      stereoWidthEl.textContent =
-        ">100%";
-
-    }
-
-    else{
-
-      stereoWidthEl.textContent =
-        "0%";
-    }
-
-  }
-
-  else{
-
-    const width =
-      (
-        sideRms /
-        midRms
-      ) *
-      100;
-
-
-    stereoWidthEl.textContent =
-      `${width.toFixed(1)}%`;
+    stereoWidthEl.textContent = sideRms > 1e-20 ? ">100%" : "0%";
+  }else{
+    stereoWidthEl.textContent = `${((sideRms/midRms)*100).toFixed(1)}%`;
   }
 }
 
-
+/* -------------------- ITU / EBU loudness -------------------- */
 
 /*
-  --------------------------------------------------------
-  WAV DECODER
-  --------------------------------------------------------
+  These coefficient sets are derived from the BS.1770 reference 48 kHz
+  K-weighting filters and bilinear-transformed to common professional
+  sample rates. We deliberately refuse unsupported rates instead of
+  pretending compliance.
 */
+const K_WEIGHT_COEFFS = {
+  44100:{
+    pre:{b:[1.53088032,-2.65135129,1.16934403],a:[1,-1.66390180,0.71277486]},
+    rlb:{b:[0.99956007,-1.99912013,0.99956007],a:[1,-1.98916968,0.98919904]}
+  },
+  48000:{
+    pre:{b:[1.53512485958697,-2.69169618940638,1.19839281085285],a:[1,-1.69065929318241,0.73248077421585]},
+    rlb:{b:[1,-2,1],a:[1,-1.99004745483398,0.99007225036621]}
+  },
+  88200:{
+    pre:{b:[1.55743831,-2.90488737,1.36074381],a:[1,-1.83043988,0.84373462]},
+    rlb:{b:[1.00227196,-2.00454392,1.00227196],a:[1,-1.99457751,0.99458487]}
+  },
+  96000:{
+    pre:{b:[1.55963860,-2.92601499,1.37767609],a:[1,-1.84413886,0.85543856]},
+    rlb:{b:[1.00249279,-2.00498557,1.00249279],a:[1,-1.99501754,0.99502375]}
+  },
+  176400:{
+    pre:{b:[1.57106393,-3.03604836,1.46845223],a:[1,-1.91501158,0.91847939]},
+    rlb:{b:[1.00363204,-2.00726409,1.00363204],a:[1,-1.99728692,0.99728876]}
+  },
+  192000:{
+    pre:{b:[1.57217937,-3.04682085,1.47757879],a:[1,-1.92190658,0.92484388]},
+    rlb:{b:[1.00374267,-2.00748535,1.00374267],a:[1,-1.99750722,0.99750877]}
+  }
+};
+
+function biquadProcess(input,coeff){
+  const out = new Float64Array(input.length);
+  const b0=coeff.b[0], b1=coeff.b[1], b2=coeff.b[2];
+  const a1=coeff.a[1], a2=coeff.a[2];
+
+  let x1=0,x2=0,y1=0,y2=0;
+  for(let i=0;i<input.length;i++){
+    const x0=input[i];
+    const y0=b0*x0+b1*x1+b2*x2-a1*y1-a2*y2;
+    out[i]=y0;
+    x2=x1; x1=x0;
+    y2=y1; y1=y0;
+  }
+  return out;
+}
+
+function buildKWeightedChannels(){
+  const set = K_WEIGHT_COEFFS[sampleRate];
+  if(!set || (channelData.length !== 1 && channelData.length !== 2)){
+    kWeightedChannels = null;
+    loudnessSupported = false;
+    kWeightingStatusEl.textContent = "Unsupported";
+    loudnessNoteEl.textContent =
+      "This standards-validation build currently enables BS.1770 loudness only for mono/stereo at 44.1, 48, 88.2, 96, 176.4 or 192 kHz. Unsupported material is left unmeasured rather than approximated.";
+    return;
+  }
+
+  kWeightedChannels = channelData.map(ch => {
+    const stage1 = biquadProcess(ch,set.pre);
+    return biquadProcess(stage1,set.rlb);
+  });
+
+  loudnessSupported = true;
+  kWeightingStatusEl.textContent = `${sampleRate} Hz OK`;
+  loudnessNoteEl.textContent =
+    "ITU-R BS.1770 / EBU Mode loudness core. Momentary and Short-Term are ungated. Integrated uses 400 ms blocks with 75% overlap, -70 LUFS absolute gate and -10 LU relative gate. LRA uses 3 s blocks with 1 s hop, -70 LUFS absolute gate and -20 LU relative gate. True Peak is intentionally NOT included in this build yet.";
+}
+
+function weightedPowerBetween(startSample,endSample){
+  if(!loudnessSupported || !kWeightedChannels) return null;
+
+  const start = Math.max(0,Math.floor(startSample));
+  const end = Math.min(kWeightedChannels[0].length,Math.floor(endSample));
+  const n = end-start;
+  if(n <= 0) return null;
+
+  let total = 0;
+
+  // Mono/stereo: BS.1770 channel gain = 1.0 for each channel.
+  for(let c=0;c<kWeightedChannels.length;c++){
+    const ch = kWeightedChannels[c];
+    let sum=0;
+    for(let i=start;i<end;i++){
+      const v=ch[i];
+      sum += v*v;
+    }
+    total += sum/n;
+  }
+
+  return total;
+}
+
+function loudnessForTrailingWindow(timeSeconds,windowSeconds){
+  if(!loudnessSupported) return null;
+
+  const end = Math.floor(timeSeconds*sampleRate);
+  const length = Math.round(windowSeconds*sampleRate);
+  const start = end-length;
+
+  if(start < 0 || end <= 0) return null;
+
+  const p = weightedPowerBetween(start,end);
+  return p === null ? null : powerToLufs(p);
+}
+
+function collectPowerBlocks(windowSeconds,hopSeconds){
+  if(!loudnessSupported) return [];
+
+  const totalSamples = kWeightedChannels[0].length;
+  const window = Math.round(windowSeconds*sampleRate);
+  const hop = Math.round(hopSeconds*sampleRate);
+  const blocks=[];
+
+  if(totalSamples < window) return blocks;
+
+  for(let start=0; start+window<=totalSamples; start+=hop){
+    const p = weightedPowerBetween(start,start+window);
+    if(p !== null && p > 0){
+      blocks.push({power:p,lufs:powerToLufs(p)});
+    }
+  }
+  return blocks;
+}
+
+function meanPower(blocks){
+  if(!blocks.length) return null;
+  let sum=0;
+  for(const b of blocks) sum += b.power;
+  return sum/blocks.length;
+}
+
+function calculateIntegratedLoudness(){
+  // 400 ms blocks, 100 ms hop = 75% overlap.
+  const blocks = collectPowerBlocks(0.400,0.100);
+  if(!blocks.length) return null;
+
+  const absolute = blocks.filter(b => b.lufs > -70);
+  if(!absolute.length) return -Infinity;
+
+  const absMean = meanPower(absolute);
+  const ungatedAfterAbsolute = powerToLufs(absMean);
+  const relativeThreshold = ungatedAfterAbsolute - 10;
+
+  const finalBlocks = absolute.filter(b => b.lufs > relativeThreshold);
+  if(!finalBlocks.length) return -Infinity;
+
+  return powerToLufs(meanPower(finalBlocks));
+}
+
+function percentile(sorted,p){
+  if(!sorted.length) return null;
+  if(sorted.length===1) return sorted[0];
+  const index=(sorted.length-1)*p;
+  const lo=Math.floor(index);
+  const hi=Math.ceil(index);
+  if(lo===hi) return sorted[lo];
+  const frac=index-lo;
+  return sorted[lo] + frac*(sorted[hi]-sorted[lo]);
+}
+
+function calculateLRA(){
+  // EBU Tech 3342 style: 3 s short-term blocks, 1 s hop.
+  const blocks = collectPowerBlocks(3.0,1.0);
+  if(blocks.length < 2) return null;
+
+  const absolute = blocks.filter(b => b.lufs > -70);
+  if(absolute.length < 2) return null;
+
+  const absMean = meanPower(absolute);
+  const relativeThreshold = powerToLufs(absMean) - 20;
+  const gated = absolute
+    .filter(b => b.lufs > relativeThreshold)
+    .map(b => b.lufs)
+    .sort((a,b)=>a-b);
+
+  if(gated.length < 2) return null;
+
+  const p10 = percentile(gated,0.10);
+  const p95 = percentile(gated,0.95);
+  return p95-p10;
+}
+
+function calculateWholeFileLoudness(){
+  if(!loudnessSupported){
+    integratedLUFSEl.textContent="N/A";
+    momentaryLUFSEl.textContent="N/A";
+    shortTermLUFSEl.textContent="N/A";
+    lraLUEl.textContent="N/A";
+    return;
+  }
+
+  const integrated = calculateIntegratedLoudness();
+  const lra = calculateLRA();
+
+  integratedLUFSEl.textContent =
+    integrated === null ? "N/A" : formatLufs(integrated);
+
+  lraLUEl.textContent =
+    lra === null ? "N/A" : `${lra.toFixed(2)} LU`;
+}
+
+function updateRealtimeLoudness(time){
+  if(!loudnessSupported){
+    momentaryLUFSEl.textContent="N/A";
+    shortTermLUFSEl.textContent="N/A";
+    return;
+  }
+
+  const m = loudnessForTrailingWindow(time,0.400);
+  const s = loudnessForTrailingWindow(time,3.0);
+
+  momentaryLUFSEl.textContent =
+    m === null ? "N/A (<400 ms)" : formatLufs(m);
+
+  shortTermLUFSEl.textContent =
+    s === null ? "N/A (<3 s)" : formatLufs(s);
+}
+
+/* -------------------- WAV decode -------------------- */
 
 function parseWav(arrayBuffer){
+  const view = new DataView(arrayBuffer);
 
-  const view =
-    new DataView(arrayBuffer);
-
-
-  function readString(
-    offset,
-    length
-  ){
-
-    let result = "";
-
-    for(let i=0;i<length;i++){
-
-      result +=
-        String.fromCharCode(
-          view.getUint8(
-            offset + i
-          )
-        );
-    }
-
+  function readString(offset,length){
+    let result="";
+    for(let i=0;i<length;i++) result += String.fromCharCode(view.getUint8(offset+i));
     return result;
   }
 
-
-  if(
-    readString(0,4) !== "RIFF" ||
-    readString(8,4) !== "WAVE"
-  ){
-
-    throw new Error(
-      "Not a standard RIFF/WAVE file."
-    );
+  if(readString(0,4)!=="RIFF" || readString(8,4)!=="WAVE"){
+    throw new Error("Not a standard RIFF/WAVE file.");
   }
 
+  let offset=12;
+  let audioFormat=null,numChannels=null,wavSampleRate=null,bitsPerSample=null;
+  let dataOffset=null,dataSize=null;
 
-  let offset = 12;
+  while(offset+8<=view.byteLength){
+    const chunkId=readString(offset,4);
+    const chunkSize=view.getUint32(offset+4,true);
+    const chunkDataOffset=offset+8;
 
-  let audioFormat = null;
-  let numChannels = null;
-  let wavSampleRate = null;
-  let bitsPerSample = null;
-
-  let dataOffset = null;
-  let dataSize = null;
-
-
-  while(
-    offset + 8 <=
-    view.byteLength
-  ){
-
-    const chunkId =
-      readString(
-        offset,
-        4
-      );
-
-
-    const chunkSize =
-      view.getUint32(
-        offset + 4,
-        true
-      );
-
-
-    const chunkDataOffset =
-      offset + 8;
-
-
-    if(chunkId === "fmt "){
-
-      audioFormat =
-        view.getUint16(
-          chunkDataOffset,
-          true
-        );
-
-
-      numChannels =
-        view.getUint16(
-          chunkDataOffset + 2,
-          true
-        );
-
-
-      wavSampleRate =
-        view.getUint32(
-          chunkDataOffset + 4,
-          true
-        );
-
-
-      bitsPerSample =
-        view.getUint16(
-          chunkDataOffset + 14,
-          true
-        );
+    if(chunkId==="fmt "){
+      audioFormat=view.getUint16(chunkDataOffset,true);
+      numChannels=view.getUint16(chunkDataOffset+2,true);
+      wavSampleRate=view.getUint32(chunkDataOffset+4,true);
+      bitsPerSample=view.getUint16(chunkDataOffset+14,true);
     }
 
-
-    if(chunkId === "data"){
-
-      dataOffset =
-        chunkDataOffset;
-
-      dataSize =
-        chunkSize;
-
+    if(chunkId==="data"){
+      dataOffset=chunkDataOffset;
+      dataSize=chunkSize;
       break;
     }
 
-
-    offset =
-      chunkDataOffset +
-      chunkSize +
-      (
-        chunkSize % 2
-      );
+    offset=chunkDataOffset+chunkSize+(chunkSize%2);
   }
 
+  if(dataOffset===null || audioFormat===null) throw new Error("Invalid WAV structure.");
 
-  if(
-    dataOffset === null ||
-    audioFormat === null
-  ){
-
-    throw new Error(
-      "Invalid WAV structure."
-    );
-  }
-
-
-  const bytesPerSample =
-    bitsPerSample / 8;
-
-
-  const frameSize =
-    bytesPerSample *
-    numChannels;
-
-
-  const frameCount =
-    Math.floor(
-      dataSize /
-      frameSize
-    );
-
-
-  const channels =
-    Array.from(
-      {
-        length:
-          numChannels
-      },
-
-      () =>
-        new Float32Array(
-          frameCount
-        )
-    );
-
+  const bytesPerSample=bitsPerSample/8;
+  const frameSize=bytesPerSample*numChannels;
+  const frameCount=Math.floor(dataSize/frameSize);
+  const channels=Array.from({length:numChannels},()=>new Float32Array(frameCount));
 
   function readSample(position){
+    if(audioFormat===3 && bitsPerSample===32) return view.getFloat32(position,true);
+    if(audioFormat!==1) throw new Error(`Unsupported WAV format: ${audioFormat}`);
 
-    if(
-      audioFormat === 3 &&
-      bitsPerSample === 32
-    ){
+    if(bitsPerSample===8) return (view.getUint8(position)-128)/128;
+    if(bitsPerSample===16) return view.getInt16(position,true)/32768;
 
-      return view.getFloat32(
-        position,
-        true
-      );
+    if(bitsPerSample===24){
+      let value=view.getUint8(position) |
+        (view.getUint8(position+1)<<8) |
+        (view.getUint8(position+2)<<16);
+      if(value & 0x800000) value |= 0xff000000;
+      return value/8388608;
     }
 
+    if(bitsPerSample===32) return view.getInt32(position,true)/2147483648;
 
-    if(audioFormat !== 1){
-
-      throw new Error(
-        `Unsupported WAV format: ${audioFormat}`
-      );
-    }
-
-
-    if(bitsPerSample === 8){
-
-      return (
-        view.getUint8(position) -
-        128
-      ) / 128;
-    }
-
-
-    if(bitsPerSample === 16){
-
-      return (
-        view.getInt16(
-          position,
-          true
-        ) /
-        32768
-      );
-    }
-
-
-    if(bitsPerSample === 24){
-
-      let value =
-        view.getUint8(
-          position
-        ) |
-
-        (
-          view.getUint8(
-            position + 1
-          ) <<
-          8
-        ) |
-
-        (
-          view.getUint8(
-            position + 2
-          ) <<
-          16
-        );
-
-
-      if(
-        value &
-        0x800000
-      ){
-
-        value |=
-          0xff000000;
-      }
-
-
-      return (
-        value /
-        8388608
-      );
-    }
-
-
-    if(bitsPerSample === 32){
-
-      return (
-        view.getInt32(
-          position,
-          true
-        ) /
-        2147483648
-      );
-    }
-
-
-    throw new Error(
-      `Unsupported WAV bit depth: ${bitsPerSample}`
-    );
+    throw new Error(`Unsupported WAV bit depth: ${bitsPerSample}`);
   }
 
-
-  let position =
-    dataOffset;
-
-
-  for(
-    let frame=0;
-    frame<frameCount;
-    frame++
-  ){
-
-    for(
-      let channel=0;
-      channel<numChannels;
-      channel++
-    ){
-
-      channels[channel][frame] =
-        readSample(position);
-
-
-      position +=
-        bytesPerSample;
+  let position=dataOffset;
+  for(let frame=0;frame<frameCount;frame++){
+    for(let channel=0;channel<numChannels;channel++){
+      channels[channel][frame]=readSample(position);
+      position += bytesPerSample;
     }
   }
 
-
-  return {
-
-    sampleRate:
-      wavSampleRate,
-
-    channels,
-
-    frameCount,
-
-    bitsPerSample
-
-  };
+  return {sampleRate:wavSampleRate,channels,frameCount,bitsPerSample};
 }
 
-
-
-async function decodeWithBrowser(
-  arrayBuffer
-){
-
-  const context =
-    new AudioContext();
-
-
+async function decodeWithBrowser(arrayBuffer){
+  const context=new AudioContext();
   try{
-
-    const decoded =
-      await context.decodeAudioData(
-        arrayBuffer.slice(0)
-      );
-
-
-    const channels = [];
-
-
-    for(
-      let i=0;
-      i<decoded.numberOfChannels;
-      i++
-    ){
-
-      channels.push(
-        new Float32Array(
-          decoded.getChannelData(i)
-        )
-      );
+    const decoded=await context.decodeAudioData(arrayBuffer.slice(0));
+    const channels=[];
+    for(let i=0;i<decoded.numberOfChannels;i++){
+      channels.push(new Float32Array(decoded.getChannelData(i)));
     }
-
-
-    return {
-
-      sampleRate:
-        decoded.sampleRate,
-
-      channels,
-
-      frameCount:
-        decoded.length
-
-    };
-
-  }
-
-  finally{
-
+    return {sampleRate:decoded.sampleRate,channels,frameCount:decoded.length};
+  }finally{
     await context.close();
   }
 }
 
+/* -------------------- FFT -------------------- */
 
+function freqToX(freq){
+  const minLog=Math.log10(MIN_FREQ);
+  const maxLog=Math.log10(MAX_FREQ);
+  return ((Math.log10(freq)-minLog)/(maxLog-minLog))*canvas.width;
+}
 
-/*
-  --------------------------------------------------------
-  FFT
-  --------------------------------------------------------
-*/
+function dbToY(db){
+  const clamped=Math.max(DISPLAY_MIN_DB,Math.min(DISPLAY_MAX_DB,db));
+  const normalized=(clamped-DISPLAY_MIN_DB)/(DISPLAY_MAX_DB-DISPLAY_MIN_DB);
+  return canvas.height-normalized*canvas.height;
+}
 
-function bitReverse(
-  real,
-  imag
-){
+function drawGrid(){
+  const width=canvas.width,height=canvas.height;
+  ctx.clearRect(0,0,width,height);
+  ctx.fillStyle="#070b10";
+  ctx.fillRect(0,0,width,height);
 
-  const n =
-    real.length;
+  const frequencies=[20,30,50,100,200,500,1000,2000,5000,10000,20000];
+  ctx.font="12px Arial";
+  ctx.textAlign="center";
 
-  let j = 0;
+  for(const freq of frequencies){
+    const x=freqToX(freq);
+    ctx.strokeStyle="#1a2530";
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke();
+    ctx.fillStyle="#778795";
+    ctx.fillText(freq>=1000?`${freq/1000}k`:`${freq}`,x,height-7);
+  }
 
+  ctx.textAlign="left";
+  for(const db of [0,-12,-24,-36,-48,-60,-72,-84,-96]){
+    const y=dbToY(db);
+    ctx.strokeStyle="#15202a";
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke();
+    ctx.fillStyle="#677887";
+    ctx.fillText(`${db} dB`,6,Math.max(12,y-4));
+  }
+}
 
-  for(
-    let i=1;
-    i<n;
-    i++
-  ){
-
-    let bit =
-      n >> 1;
-
-
-    while(j & bit){
-
-      j ^= bit;
-
-      bit >>= 1;
-    }
-
-
-    j ^= bit;
-
-
-    if(i < j){
-
-      let temp =
-        real[i];
-
-
-      real[i] =
-        real[j];
-
-
-      real[j] =
-        temp;
-
-
-      temp =
-        imag[i];
-
-
-      imag[i] =
-        imag[j];
-
-
-      imag[j] =
-        temp;
+function bitReverse(real,imag){
+  const n=real.length;
+  let j=0;
+  for(let i=1;i<n;i++){
+    let bit=n>>1;
+    while(j&bit){j^=bit;bit>>=1;}
+    j^=bit;
+    if(i<j){
+      let t=real[i];real[i]=real[j];real[j]=t;
+      t=imag[i];imag[i]=imag[j];imag[j]=t;
     }
   }
 }
 
+function fft(real,imag){
+  const n=real.length;
+  bitReverse(real,imag);
 
+  for(let length=2;length<=n;length<<=1){
+    const half=length>>1;
+    const angle=-2*Math.PI/length;
+    const wr0=Math.cos(angle),wi0=Math.sin(angle);
 
-function fft(
-  real,
-  imag
-){
+    for(let start=0;start<n;start+=length){
+      let wr=1,wi=0;
+      for(let j=0;j<half;j++){
+        const even=start+j,odd=even+half;
+        const or=real[odd]*wr-imag[odd]*wi;
+        const oi=real[odd]*wi+imag[odd]*wr;
+        const er=real[even],ei=imag[even];
 
-  const n =
-    real.length;
+        real[even]=er+or;imag[even]=ei+oi;
+        real[odd]=er-or;imag[odd]=ei-oi;
 
-
-  bitReverse(
-    real,
-    imag
-  );
-
-
-  for(
-    let length=2;
-    length<=n;
-    length<<=1
-  ){
-
-    const half =
-      length >> 1;
-
-
-    const angle =
-      -2 *
-      Math.PI /
-      length;
-
-
-    const wLengthReal =
-      Math.cos(angle);
-
-
-    const wLengthImag =
-      Math.sin(angle);
-
-
-    for(
-      let start=0;
-      start<n;
-      start+=length
-    ){
-
-      let wReal = 1;
-      let wImag = 0;
-
-
-      for(
-        let j=0;
-        j<half;
-        j++
-      ){
-
-        const even =
-          start + j;
-
-
-        const odd =
-          even + half;
-
-
-        const oddReal =
-          real[odd] *
-          wReal -
-          imag[odd] *
-          wImag;
-
-
-        const oddImag =
-          real[odd] *
-          wImag +
-          imag[odd] *
-          wReal;
-
-
-        const evenReal =
-          real[even];
-
-
-        const evenImag =
-          imag[even];
-
-
-        real[even] =
-          evenReal +
-          oddReal;
-
-
-        imag[even] =
-          evenImag +
-          oddImag;
-
-
-        real[odd] =
-          evenReal -
-          oddReal;
-
-
-        imag[odd] =
-          evenImag -
-          oddImag;
-
-
-        const nextWReal =
-          wReal *
-          wLengthReal -
-          wImag *
-          wLengthImag;
-
-
-        const nextWImag =
-          wReal *
-          wLengthImag +
-          wImag *
-          wLengthReal;
-
-
-        wReal =
-          nextWReal;
-
-
-        wImag =
-          nextWImag;
+        const nwr=wr*wr0-wi*wi0;
+        const nwi=wr*wi0+wi*wr0;
+        wr=nwr;wi=nwi;
       }
     }
   }
 }
 
+function calculateSpectrum(requestedTime){
+  if(!monoData || !sampleRate) return null;
 
+  requestedTime=Math.max(0,Math.min(duration,requestedTime));
+  const halfWindow=WINDOW_SIZE/2;
+  const requestedCenterSample=Math.round(requestedTime*sampleRate);
+  const maxStart=Math.max(0,monoData.length-WINDOW_SIZE);
 
-function calculateSpectrum(
-  requestedTime
-){
+  let startSample=requestedCenterSample-halfWindow;
+  let edgeAdjusted=false;
 
-  if(
-    !monoData ||
-    !sampleRate
-  ){
-    return null;
-  }
+  if(startSample<0){startSample=0;edgeAdjusted=true;}
+  if(startSample>maxStart){startSample=maxStart;edgeAdjusted=true;}
 
+  const effectiveCenterSample=startSample+halfWindow;
+  const effectiveCenterTime=effectiveCenterSample/sampleRate;
 
-  requestedTime =
-    Math.max(
-      0,
-      Math.min(
-        duration,
-        requestedTime
-      )
-    );
+  const real=new Float64Array(FFT_SIZE);
+  const imag=new Float64Array(FFT_SIZE);
+  let windowSum=0;
 
-
-  const halfWindow =
-    WINDOW_SIZE / 2;
-
-
-  const requestedCenterSample =
-    Math.round(
-      requestedTime *
-      sampleRate
-    );
-
-
-  const maxStart =
-    Math.max(
-      0,
-      monoData.length -
-      WINDOW_SIZE
-    );
-
-
-  let startSample =
-    requestedCenterSample -
-    halfWindow;
-
-
-  let edgeAdjusted =
-    false;
-
-
-  if(startSample < 0){
-
-    startSample = 0;
-    edgeAdjusted = true;
-  }
-
-
-  if(startSample > maxStart){
-
-    startSample =
-      maxStart;
-
-    edgeAdjusted =
-      true;
-  }
-
-
-  const effectiveCenterSample =
-    startSample +
-    halfWindow;
-
-
-  const effectiveCenterTime =
-    effectiveCenterSample /
-    sampleRate;
-
-
-  const real =
-    new Float64Array(
-      FFT_SIZE
-    );
-
-
-  const imag =
-    new Float64Array(
-      FFT_SIZE
-    );
-
-
-  let windowSum = 0;
-
-
-  for(
-    let i=0;
-    i<WINDOW_SIZE;
-    i++
-  ){
-
-    const window =
-      0.5 -
-      0.5 *
-      Math.cos(
-        2 *
-        Math.PI *
-        i /
-        (
-          WINDOW_SIZE -
-          1
-        )
-      );
-
-
+  for(let i=0;i<WINDOW_SIZE;i++){
+    const window=0.5-0.5*Math.cos(2*Math.PI*i/(WINDOW_SIZE-1));
     windowSum += window;
-
-
-    const sampleIndex =
-      startSample +
-      i;
-
-
-    const sample =
-      sampleIndex <
-      monoData.length
-        ? monoData[
-            sampleIndex
-          ]
-        : 0;
-
-
-    real[i] =
-      sample *
-      window;
+    const sampleIndex=startSample+i;
+    const sample=sampleIndex<monoData.length?monoData[sampleIndex]:0;
+    real[i]=sample*window;
   }
 
+  fft(real,imag);
 
-  fft(
-    real,
-    imag
-  );
+  const half=FFT_SIZE/2;
+  const frequencies=new Float64Array(half);
+  const dbValues=new Float64Array(half);
+  let peakDb=-Infinity,peakFrequency=0,peakBin=0;
 
+  for(let k=1;k<half;k++){
+    const frequency=k*sampleRate/FFT_SIZE;
+    const magnitude=Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    const amplitude=2*magnitude/windowSum;
+    const db=linearToDb(amplitude);
 
-  const half =
-    FFT_SIZE / 2;
+    frequencies[k]=frequency;
+    dbValues[k]=db;
 
-
-  const frequencies =
-    new Float64Array(
-      half
-    );
-
-
-  const dbValues =
-    new Float64Array(
-      half
-    );
-
-
-  let peakDb =
-    -Infinity;
-
-
-  let peakFrequency =
-    0;
-
-
-  let peakBin =
-    0;
-
-
-  for(
-    let k=1;
-    k<half;
-    k++
-  ){
-
-    const frequency =
-      k *
-      sampleRate /
-      FFT_SIZE;
-
-
-    const magnitude =
-      Math.sqrt(
-        real[k] *
-        real[k] +
-        imag[k] *
-        imag[k]
-      );
-
-
-    const amplitude =
-      2 *
-      magnitude /
-      windowSum;
-
-
-    const db =
-      linearToDb(
-        amplitude
-      );
-
-
-    frequencies[k] =
-      frequency;
-
-
-    dbValues[k] =
-      db;
-
-
-    if(
-      Number.isFinite(db) &&
-      db > peakDb &&
-      frequency >= MIN_FREQ &&
-      frequency <= MAX_FREQ
-    ){
-
-      peakDb =
-        db;
-
-
-      peakFrequency =
-        frequency;
-
-
-      peakBin =
-        k;
+    if(Number.isFinite(db) && db>peakDb && frequency>=MIN_FREQ && frequency<=MAX_FREQ){
+      peakDb=db;peakFrequency=frequency;peakBin=k;
     }
   }
 
-
-  if(
-    peakBin > 1 &&
-    peakBin < half - 1
-  ){
-
-    const y1 =
-      dbValues[
-        peakBin - 1
-      ];
-
-
-    const y2 =
-      dbValues[
-        peakBin
-      ];
-
-
-    const y3 =
-      dbValues[
-        peakBin + 1
-      ];
-
-
-    const denominator =
-      y1 -
-      2 * y2 +
-      y3;
-
-
-    if(
-      Number.isFinite(
-        denominator
-      ) &&
-      Math.abs(
-        denominator
-      ) >
-      1e-12
-    ){
-
-      const delta =
-        0.5 *
-        (
-          y1 -
-          y3
-        ) /
-        denominator;
-
-
-      peakFrequency =
-        (
-          peakBin +
-          delta
-        ) *
-        sampleRate /
-        FFT_SIZE;
-
-
-      peakDb =
-        y2 -
-        0.25 *
-        (
-          y1 -
-          y3
-        ) *
-        delta;
+  if(peakBin>1 && peakBin<half-1){
+    const y1=dbValues[peakBin-1],y2=dbValues[peakBin],y3=dbValues[peakBin+1];
+    const den=y1-2*y2+y3;
+    if(Number.isFinite(den) && Math.abs(den)>1e-12){
+      const delta=0.5*(y1-y3)/den;
+      peakFrequency=(peakBin+delta)*sampleRate/FFT_SIZE;
+      peakDb=y2-0.25*(y1-y3)*delta;
     }
   }
 
-
-  return {
-
-    frequencies,
-    dbValues,
-
-    peakDb,
-    peakFrequency,
-
-    requestedTime,
-    effectiveCenterTime,
-    edgeAdjusted
-
-  };
+  return {frequencies,dbValues,peakDb,peakFrequency,requestedTime,effectiveCenterTime,edgeAdjusted};
 }
 
-
-
-function drawSpectrum(
-  spectrum
-){
-
+function drawSpectrum(spectrum){
   drawGrid();
+  if(!spectrum) return;
 
+  const width=canvas.width;
+  const pixelMax=new Float64Array(width);
+  pixelMax.fill(-Infinity);
 
-  if(!spectrum){
-    return;
+  for(let i=1;i<spectrum.frequencies.length;i++){
+    const f=spectrum.frequencies[i];
+    if(f<MIN_FREQ) continue;
+    if(f>MAX_FREQ) break;
+    const db=spectrum.dbValues[i];
+    if(!Number.isFinite(db)) continue;
+    const x=Math.floor(freqToX(f));
+    if(x>=0 && x<width && db>pixelMax[x]) pixelMax[x]=db;
   }
 
-
-  const width =
-    canvas.width;
-
-
-  const pixelMax =
-    new Float64Array(
-      width
-    );
-
-
-  pixelMax.fill(
-    -Infinity
-  );
-
-
-  for(
-    let i=1;
-    i<spectrum.frequencies.length;
-    i++
-  ){
-
-    const frequency =
-      spectrum.frequencies[i];
-
-
-    if(
-      frequency <
-      MIN_FREQ
-    ){
-      continue;
-    }
-
-
-    if(
-      frequency >
-      MAX_FREQ
-    ){
-      break;
-    }
-
-
-    const db =
-      spectrum.dbValues[i];
-
-
-    if(
-      !Number.isFinite(db)
-    ){
-      continue;
-    }
-
-
-    const x =
-      Math.floor(
-        freqToX(
-          frequency
-        )
-      );
-
-
-    if(
-      x >= 0 &&
-      x < width &&
-      db > pixelMax[x]
-    ){
-
-      pixelMax[x] =
-        db;
-    }
-  }
-
-
-  ctx.strokeStyle =
-    "#d8ff4f";
-
-
-  ctx.lineWidth = 2;
-
-
+  ctx.strokeStyle="#d8ff4f";
+  ctx.lineWidth=2;
   ctx.beginPath();
 
-
-  let started =
-    false;
-
-
-  let lastValidDb =
-    DISPLAY_MIN_DB;
-
-
-  for(
-    let x=0;
-    x<width;
-    x++
-  ){
-
-    let db =
-      pixelMax[x];
-
-
-    if(
-      !Number.isFinite(db)
-    ){
-
-      db =
-        lastValidDb;
-    }
-
-    else{
-
-      lastValidDb =
-        db;
-    }
-
-
-    const y =
-      dbToY(db);
-
-
-    if(!started){
-
-      ctx.moveTo(
-        x,
-        y
-      );
-
-      started =
-        true;
-    }
-
-    else{
-
-      ctx.lineTo(
-        x,
-        y
-      );
-    }
+  let started=false,lastValidDb=DISPLAY_MIN_DB;
+  for(let x=0;x<width;x++){
+    let db=pixelMax[x];
+    if(!Number.isFinite(db)) db=lastValidDb;
+    else lastValidDb=db;
+    const y=dbToY(db);
+    if(!started){ctx.moveTo(x,y);started=true;}
+    else ctx.lineTo(x,y);
   }
-
-
   ctx.stroke();
-
 
   spectrumPeakEl.textContent =
     `${spectrum.peakFrequency.toFixed(2)} Hz / ${spectrum.peakDb.toFixed(2)} dBFS`;
 }
 
+/* -------------------- sweep validation -------------------- */
 
+function estimateFrequencyFromZeroCrossings(time){
+  if(!monoData || !sampleRate) return null;
 
-/*
-  --------------------------------------------------------
-  SWEEP TRACKER
-  --------------------------------------------------------
-*/
+  const targetSample=Math.max(0,Math.min(monoData.length-1,time*sampleRate));
+  const radius=Math.round(sampleRate*0.40);
+  const start=Math.max(1,Math.floor(targetSample-radius));
+  const end=Math.min(monoData.length-1,Math.ceil(targetSample+radius));
+  const crossings=[];
 
-function estimateFrequencyFromZeroCrossings(
-  time
-){
-
-  if(
-    !monoData ||
-    !sampleRate
-  ){
-    return null;
-  }
-
-
-  const targetSample =
-    Math.max(
-      0,
-      Math.min(
-        monoData.length - 1,
-        time *
-        sampleRate
-      )
-    );
-
-
-  const radius =
-    Math.round(
-      sampleRate *
-      0.40
-    );
-
-
-  const start =
-    Math.max(
-      1,
-      Math.floor(
-        targetSample -
-        radius
-      )
-    );
-
-
-  const end =
-    Math.min(
-      monoData.length - 1,
-      Math.ceil(
-        targetSample +
-        radius
-      )
-    );
-
-
-  const crossings = [];
-
-
-  for(
-    let i=start;
-    i<=end;
-    i++
-  ){
-
-    const previous =
-      monoData[
-        i - 1
-      ];
-
-
-    const current =
-      monoData[i];
-
-
-    if(
-      previous <= 0 &&
-      current > 0
-    ){
-
-      const difference =
-        current -
-        previous;
-
-
-      let fraction = 0;
-
-
-      if(
-        Math.abs(
-          difference
-        ) >
-        1e-15
-      ){
-
-        fraction =
-          -previous /
-          difference;
-      }
-
-
-      crossings.push(
-        (
-          i - 1
-        ) +
-        fraction
-      );
+  for(let i=start;i<=end;i++){
+    const previous=monoData[i-1],current=monoData[i];
+    if(previous<=0 && current>0){
+      const difference=current-previous;
+      let fraction=0;
+      if(Math.abs(difference)>1e-15) fraction=-previous/difference;
+      crossings.push((i-1)+fraction);
     }
   }
 
+  if(crossings.length<3) return null;
 
-  if(
-    crossings.length <
-    3
-  ){
-    return null;
+  const observations=[];
+  for(let i=1;i<crossings.length;i++){
+    const a=crossings[i-1],b=crossings[i];
+    const period=b-a;
+    if(!Number.isFinite(period)||period<=0) continue;
+    observations.push({sample:(a+b)/2,frequency:sampleRate/period});
   }
 
+  if(observations.length<2) return null;
 
-  const observations = [];
-
-
-  for(
-    let i=1;
-    i<crossings.length;
-    i++
-  ){
-
-    const a =
-      crossings[
-        i - 1
-      ];
-
-
-    const b =
-      crossings[i];
-
-
-    const period =
-      b - a;
-
-
-    if(
-      !Number.isFinite(period) ||
-      period <= 0
-    ){
-      continue;
-    }
-
-
-    observations.push({
-
-      sample:
-        (
-          a + b
-        ) /
-        2,
-
-      frequency:
-        sampleRate /
-        period
-
-    });
+  let before=null,after=null;
+  for(const o of observations){
+    if(o.sample<=targetSample) before=o;
+    if(o.sample>=targetSample){after=o;break;}
   }
 
+  if(!before && after) return after.frequency;
+  if(before && !after) return before.frequency;
+  if(!before || !after) return null;
+  if(Math.abs(after.sample-before.sample)<1e-12) return before.frequency;
 
-  if(
-    observations.length <
-    2
-  ){
-    return null;
-  }
-
-
-  let before = null;
-  let after = null;
-
-
-  for(
-    const observation
-    of observations
-  ){
-
-    if(
-      observation.sample <=
-      targetSample
-    ){
-
-      before =
-        observation;
-    }
-
-
-    if(
-      observation.sample >=
-      targetSample
-    ){
-
-      after =
-        observation;
-
-      break;
-    }
-  }
-
-
-  if(
-    !before &&
-    after
-  ){
-
-    return after.frequency;
-  }
-
-
-  if(
-    before &&
-    !after
-  ){
-
-    return before.frequency;
-  }
-
-
-  if(
-    !before ||
-    !after
-  ){
-
-    return null;
-  }
-
-
-  if(
-    Math.abs(
-      after.sample -
-      before.sample
-    ) <
-    1e-12
-  ){
-
-    return before.frequency;
-  }
-
-
-  const interpolation =
-    (
-      targetSample -
-      before.sample
-    ) /
-    (
-      after.sample -
-      before.sample
-    );
-
-
-  const logBefore =
-    Math.log(
-      before.frequency
-    );
-
-
-  const logAfter =
-    Math.log(
-      after.frequency
-    );
-
-
-  return Math.exp(
-
-    logBefore +
-
-    interpolation *
-    (
-      logAfter -
-      logBefore
-    )
-
-  );
+  const t=(targetSample-before.sample)/(after.sample-before.sample);
+  const logBefore=Math.log(before.frequency);
+  const logAfter=Math.log(after.frequency);
+  return Math.exp(logBefore+t*(logAfter-logBefore));
 }
 
-
-
-function expectedSweepFrequency(
-  time
-){
-
-  if(
-    duration <= 0
-  ){
-    return null;
-  }
-
-
-  const t =
-    Math.max(
-      0,
-      Math.min(
-        duration,
-        time
-      )
-    );
-
-
-  return (
-    SWEEP_START_FREQ *
-    Math.pow(
-      SWEEP_END_FREQ /
-      SWEEP_START_FREQ,
-      t /
-      duration
-    )
-  );
+function expectedSweepFrequency(time){
+  if(duration<=0) return null;
+  const t=Math.max(0,Math.min(duration,time));
+  return SWEEP_START_FREQ*Math.pow(SWEEP_END_FREQ/SWEEP_START_FREQ,t/duration);
 }
-
-
 
 function isSweepFile(){
-
-  const filename =
-    fileInput.files[0]
-      ?.name
-      ?.toLowerCase() ||
-    "";
-
-
-  return (
-    filename.includes(
-      "20hz_to_20khz"
-    ) &&
-    filename.includes(
-      "sweep"
-    )
-  );
+  const filename=fileInput.files[0]?.name?.toLowerCase()||"";
+  return filename.includes("20hz_to_20khz") && filename.includes("sweep");
 }
 
-
-
 function getSteadyToneTest(){
-
-  const filename =
-    fileInput.files[0]
-      ?.name
-      ?.toLowerCase() ||
-    "";
-
-
-  if(
-    filename.includes(
-      "100hz_-18dbfs"
-    )
-  ){
-
-    return {
-      frequency:100,
-      peak:-18,
-      rms:-21.0103
-    };
-  }
-
-
-  if(
-    filename.includes(
-      "1khz_-18dbfs"
-    )
-  ){
-
-    return {
-      frequency:1000,
-      peak:-18,
-      rms:-21.0103
-    };
-  }
-
-
-  if(
-    filename.includes(
-      "10khz_-18dbfs"
-    )
-  ){
-
-    return {
-      frequency:10000,
-      peak:-18,
-      rms:-21.0103
-    };
-  }
-
-
+  const filename=fileInput.files[0]?.name?.toLowerCase()||"";
+  if(filename.includes("100hz_-18dbfs")) return {frequency:100,peak:-18,rms:-21.0103};
+  if(filename.includes("1khz_-18dbfs")) return {frequency:1000,peak:-18,rms:-21.0103};
+  if(filename.includes("10khz_-18dbfs")) return {frequency:10000,peak:-18,rms:-21.0103};
   return null;
 }
 
-
-
 function passLabel(passed){
-
-  return (
-    `<span class="${passed ? "pass" : "fail"}">` +
-    `${passed ? "PASS" : "FAIL"}` +
-    `</span>`
-  );
+  return `<span class="${passed?"pass":"fail"}">${passed?"PASS":"FAIL"}</span>`;
 }
 
-
-
 function updateValidation(){
-
-  if(
-    measuredPeakLeft === null ||
-    measuredRmsLeft === null ||
-    !lastSpectrumResult
-  ){
-
-    validationEl.innerHTML =
-      "";
-
+  if(measuredPeakLeft===null || measuredRmsLeft===null || !lastSpectrumResult){
+    validationEl.innerHTML="";
     return;
   }
 
-
-  const steadyTest =
-    getSteadyToneTest();
-
+  const steadyTest=getSteadyToneTest();
 
   if(steadyTest){
+    const peakError=Math.abs(measuredPeakLeft-steadyTest.peak);
+    const rmsError=Math.abs(measuredRmsLeft-steadyTest.rms);
+    const frequencyError=Math.abs(lastSpectrumResult.peakFrequency-steadyTest.frequency);
+    const spectrumError=Math.abs(lastSpectrumResult.peakDb-steadyTest.peak);
 
-    const peakError =
-      Math.abs(
-        measuredPeakLeft -
-        steadyTest.peak
-      );
-
-
-    const rmsError =
-      Math.abs(
-        measuredRmsLeft -
-        steadyTest.rms
-      );
-
-
-    const frequencyError =
-      Math.abs(
-        lastSpectrumResult
-          .peakFrequency -
-        steadyTest.frequency
-      );
-
-
-    const spectrumError =
-      Math.abs(
-        lastSpectrumResult
-          .peakDb -
-        steadyTest.peak
-      );
-
-
-    validationEl.innerHTML =
-      `
-      <div class="validation-title">
-      Calibration — ${steadyTest.frequency} Hz / -18 dBFS
-      </div>
-
-      Peak:
-      expected ${steadyTest.peak.toFixed(3)} dBFS —
-      measured ${measuredPeakLeft.toFixed(3)} dBFS —
-      error ${peakError.toFixed(3)} dB —
-      ${passLabel(
-        peakError <= 0.05
-      )}
-
+    validationEl.innerHTML=`
+      <div class="validation-title">Calibration — ${steadyTest.frequency} Hz / -18 dBFS</div>
+      Peak: expected ${steadyTest.peak.toFixed(3)} dBFS — measured ${measuredPeakLeft.toFixed(3)} dBFS — error ${peakError.toFixed(3)} dB — ${passLabel(peakError<=0.05)}
       <br>
-
-      RMS:
-      expected ${steadyTest.rms.toFixed(3)} dBFS —
-      measured ${measuredRmsLeft.toFixed(3)} dBFS —
-      error ${rmsError.toFixed(3)} dB —
-      ${passLabel(
-        rmsError <= 0.05
-      )}
-
+      RMS: expected ${steadyTest.rms.toFixed(3)} dBFS — measured ${measuredRmsLeft.toFixed(3)} dBFS — error ${rmsError.toFixed(3)} dB — ${passLabel(rmsError<=0.05)}
       <br>
-
-      Frequency:
-      expected ${steadyTest.frequency.toFixed(3)} Hz —
-      measured ${lastSpectrumResult.peakFrequency.toFixed(3)} Hz —
-      error ${frequencyError.toFixed(3)} Hz —
-      ${passLabel(
-        frequencyError <=
-        Math.max(
-          1,
-          steadyTest.frequency *
-          0.001
-        )
-      )}
-
+      Frequency: expected ${steadyTest.frequency.toFixed(3)} Hz — measured ${lastSpectrumResult.peakFrequency.toFixed(3)} Hz — error ${frequencyError.toFixed(3)} Hz — ${passLabel(frequencyError<=Math.max(1,steadyTest.frequency*0.001))}
       <br>
-
-      Spectrum amplitude:
-      expected ${steadyTest.peak.toFixed(3)} dBFS —
-      measured ${lastSpectrumResult.peakDb.toFixed(3)} dBFS —
-      error ${spectrumError.toFixed(3)} dB —
-      ${passLabel(
-        spectrumError <=
-        0.10
-      )}
-      `;
-
+      Spectrum amplitude: expected ${steadyTest.peak.toFixed(3)} dBFS — measured ${lastSpectrumResult.peakDb.toFixed(3)} dBFS — error ${spectrumError.toFixed(3)} dB — ${passLabel(spectrumError<=0.10)}
+    `;
     return;
   }
 
-
   if(isSweepFile()){
+    const analysisTime=lastSpectrumResult.effectiveCenterTime;
+    const expected=expectedSweepFrequency(analysisTime);
+    const measured=estimateFrequencyFromZeroCrossings(analysisTime);
 
-    const analysisTime =
-      lastSpectrumResult
-        .effectiveCenterTime;
-
-
-    const expected =
-      expectedSweepFrequency(
-        analysisTime
-      );
-
-
-    const measured =
-      estimateFrequencyFromZeroCrossings(
-        analysisTime
-      );
-
-
-    if(
-      !Number.isFinite(
-        expected
-      ) ||
-      !Number.isFinite(
-        measured
-      )
-    ){
-
-      validationEl.innerHTML =
-        `
-        <div class="validation-title">
-        Log Sweep Tracking
-        </div>
-        Measurement unavailable at this position.
-        `;
-
+    if(!Number.isFinite(expected)||!Number.isFinite(measured)){
+      validationEl.innerHTML=`<div class="validation-title">Log Sweep Tracking</div>Measurement unavailable at this position.`;
       return;
     }
 
+    const errorHz=Math.abs(measured-expected);
+    const errorPercent=(errorHz/expected)*100;
+    const pass=errorPercent<=2;
 
-    const errorHz =
-      Math.abs(
-        measured -
-        expected
-      );
-
-
-    const errorPercent =
-      (
-        errorHz /
-        expected
-      ) *
-      100;
-
-
-    const pass =
-      errorPercent <=
-      2;
-
-
-    let edgeMessage = "";
-
-
-    if(
-      lastSpectrumResult
-        .edgeAdjusted
-    ){
-
-      edgeMessage =
-        `
-        <br>
-        <span class="info">
-        Edge-safe analysis:
-        requested position is
-        ${lastSpectrumResult.requestedTime.toFixed(3)} s,
-        but the full FFT window is centered at
-        ${analysisTime.toFixed(3)} s.
-        </span>
-        `;
+    let edgeMessage="";
+    if(lastSpectrumResult.edgeAdjusted){
+      edgeMessage=`
+        <br><span class="info">
+        Edge-safe analysis: requested position is ${lastSpectrumResult.requestedTime.toFixed(3)} s,
+        but the full FFT window is centered at ${analysisTime.toFixed(3)} s.
+        </span>`;
     }
 
-
-    validationEl.innerHTML =
-      `
-      <div class="validation-title">
-      Log Sweep Tracking
-      </div>
-
-      Requested analysis time:
-      ${lastSpectrumResult.requestedTime.toFixed(3)} s
-
+    validationEl.innerHTML=`
+      <div class="validation-title">Log Sweep Tracking</div>
+      Requested analysis time: ${lastSpectrumResult.requestedTime.toFixed(3)} s
       <br>
-
-      Actual analysis-center time:
-      <strong>${analysisTime.toFixed(3)} s</strong>
-
+      Actual analysis-center time: <strong>${analysisTime.toFixed(3)} s</strong>
       <br>
-
-      Expected frequency:
-      <strong>${expected.toFixed(2)} Hz</strong>
-
+      Expected frequency: <strong>${expected.toFixed(2)} Hz</strong>
       <br>
-
-      Measured frequency:
-      <strong>${measured.toFixed(2)} Hz</strong>
-
+      Measured frequency: <strong>${measured.toFixed(2)} Hz</strong>
       <br>
-
-      Error:
-      ${errorHz.toFixed(2)} Hz
-      (${errorPercent.toFixed(3)}%)
-
-      —
-      ${passLabel(pass)}
-
+      Error: ${errorHz.toFixed(2)} Hz (${errorPercent.toFixed(3)}%) — ${passLabel(pass)}
       <br>
-
-      FFT peak display:
-      ${lastSpectrumResult.peakFrequency.toFixed(2)} Hz
-
+      FFT peak display: ${lastSpectrumResult.peakFrequency.toFixed(2)} Hz
       ${edgeMessage}
-
-      <br>
-
-      <span class="info">
-      Sweep tracker uses cycle-midpoint timing + log-frequency interpolation.
-      </span>
-
-      <br>
-
-      <span class="info">
-      Sweep amplitude is intentionally not graded as a steady-sine amplitude test.
-      </span>
-      `;
-
+      <br><span class="info">Sweep tracker uses cycle-midpoint timing + log-frequency interpolation.</span>
+      <br><span class="info">Sweep amplitude is intentionally not graded as a steady-sine amplitude test.</span>
+    `;
     return;
   }
 
-
-  validationEl.innerHTML =
-    "";
+  validationEl.innerHTML="";
 }
 
-
+/* -------------------- analysis/update -------------------- */
 
 function analyzeAtTime(time){
-
-  if(!monoData){
-    return;
-  }
-
-
-  const safeTime =
-    Math.max(
-      0,
-      Math.min(
-        duration,
-        Number(time)
-      )
-    );
-
-
-  const spectrum =
-    calculateSpectrum(
-      safeTime
-    );
-
-
-  lastSpectrumResult =
-    spectrum;
-
-
-  drawSpectrum(
-    spectrum
-  );
-
-
+  if(!monoData) return;
+  const safeTime=Math.max(0,Math.min(duration,Number(time)));
+  const spectrum=calculateSpectrum(safeTime);
+  lastSpectrumResult=spectrum;
+  drawSpectrum(spectrum);
   updateValidation();
+  updateRealtimeLoudness(safeTime);
 }
-
-
 
 function updateMeasurements(){
+  if(!channelData.length) return;
 
-  if(
-    channelData.length === 0
-  ){
-    return;
-  }
+  const left=channelData[0];
+  const right=channelData.length>1?channelData[1]:channelData[0];
 
+  measuredPeakLeft=linearToDb(calculatePeak(left));
+  const measuredPeakRight=linearToDb(calculatePeak(right));
+  measuredRmsLeft=linearToDb(calculateRms(left));
+  const measuredRmsRight=linearToDb(calculateRms(right));
 
-  const left =
-    channelData[0];
-
-
-  const right =
-    channelData.length > 1
-      ? channelData[1]
-      : channelData[0];
-
-
-  measuredPeakLeft =
-    linearToDb(
-      calculatePeak(
-        left
-      )
-    );
-
-
-  const measuredPeakRight =
-    linearToDb(
-      calculatePeak(
-        right
-      )
-    );
-
-
-  measuredRmsLeft =
-    linearToDb(
-      calculateRms(
-        left
-      )
-    );
-
-
-  const measuredRmsRight =
-    linearToDb(
-      calculateRms(
-        right
-      )
-    );
-
-
-  peakLEl.textContent =
-    formatDb(
-      measuredPeakLeft
-    );
-
-
-  peakREl.textContent =
-    formatDb(
-      measuredPeakRight
-    );
-
-
-  rmsLEl.textContent =
-    formatDb(
-      measuredRmsLeft
-    );
-
-
-  rmsREl.textContent =
-    formatDb(
-      measuredRmsRight
-    );
+  peakLEl.textContent=formatDb(measuredPeakLeft);
+  peakREl.textContent=formatDb(measuredPeakRight);
+  rmsLEl.textContent=formatDb(measuredRmsLeft);
+  rmsREl.textContent=formatDb(measuredRmsRight);
 }
 
-
-
-function updateTime(
-  displayedTime =
-    player.currentTime
-){
-
-  timeDisplay.textContent =
-    `${formatTime(displayedTime)} / ${formatTime(duration)}`;
+function updateTime(displayedTime=player.currentTime){
+  timeDisplay.textContent=`${formatTime(displayedTime)} / ${formatTime(duration)}`;
 }
 
-
+/* -------------------- load / events -------------------- */
 
 async function loadFile(file){
+  statusEl.className="status";
+  statusEl.textContent="Reading audio data...";
 
-  statusEl.className =
-    "status";
-
-
-  statusEl.textContent =
-    "Reading audio data...";
-
-
-  const arrayBuffer =
-    await file.arrayBuffer();
-
-
+  const arrayBuffer=await file.arrayBuffer();
   let decoded;
 
-
-  if(
-    file.name
-      .toLowerCase()
-      .endsWith(".wav")
-  ){
-
+  if(file.name.toLowerCase().endsWith(".wav")){
     try{
-
-      decoded =
-        parseWav(
-          arrayBuffer
-        );
-
-
-      statusEl.textContent =
-        "WAV decoded directly at source sample rate.";
-    }
-
-    catch(error){
-
+      decoded=parseWav(arrayBuffer);
+      statusEl.textContent="WAV decoded directly at source sample rate.";
+    }catch(error){
       console.warn(error);
-
-
-      decoded =
-        await decodeWithBrowser(
-          arrayBuffer
-        );
-
-
-      statusEl.textContent =
-        "WAV decoded using browser fallback.";
+      decoded=await decodeWithBrowser(arrayBuffer);
+      statusEl.textContent="WAV decoded using browser fallback.";
     }
+  }else{
+    decoded=await decodeWithBrowser(arrayBuffer);
+    statusEl.textContent="Compressed audio decoded by browser.";
   }
 
-  else{
+  sampleRate=decoded.sampleRate;
+  channelData=decoded.channels;
+  monoData=buildMono();
+  duration=decoded.frameCount/sampleRate;
 
-    decoded =
-      await decodeWithBrowser(
-        arrayBuffer
-      );
+  sourceSampleRateEl.textContent=`${sampleRate} Hz`;
+  channelsEl.textContent=channelData.length;
+  nyquistEl.textContent=`${(sampleRate/2).toFixed(0)} Hz`;
+  durationEl.textContent=`${duration.toFixed(2)} s`;
 
-
-    statusEl.textContent =
-      "Compressed audio decoded by browser.";
-  }
-
-
-  sampleRate =
-    decoded.sampleRate;
-
-
-  channelData =
-    decoded.channels;
-
-
-  monoData =
-    buildMono();
-
-
-  duration =
-    decoded.frameCount /
-    sampleRate;
-
-
-  sourceSampleRateEl.textContent =
-    `${sampleRate} Hz`;
-
-
-  channelsEl.textContent =
-    channelData.length;
-
-
-  nyquistEl.textContent =
-    `${(
-      sampleRate /
-      2
-    ).toFixed(0)} Hz`;
-
-
-  durationEl.textContent =
-    `${duration.toFixed(2)} s`;
-
-
-  seekSlider.max =
-    duration;
-
-
-  seekSlider.value =
-    0;
-
-
-  measuredPeakLeft =
-    null;
-
-
-  measuredRmsLeft =
-    null;
-
-
-  lastSpectrumResult =
-    null;
-
-
-  isScrubbing =
-    false;
-
+  seekSlider.max=duration;
+  seekSlider.value=0;
+  measuredPeakLeft=null;
+  measuredRmsLeft=null;
+  lastSpectrumResult=null;
+  isScrubbing=false;
 
   updateMeasurements();
-
-
-  /*
-    New diagnostic analysis.
-  */
-
   calculateDiagnostics();
 
+  statusEl.textContent += " Calculating standards-based loudness…";
+  await new Promise(resolve=>setTimeout(resolve,0));
+  buildKWeightedChannels();
+  calculateWholeFileLoudness();
+  statusEl.textContent = file.name.toLowerCase().endsWith(".wav")
+    ? "WAV decoded directly at source sample rate."
+    : "Compressed audio decoded by browser.";
 
-  if(currentObjectUrl){
+  if(currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+  currentObjectUrl=URL.createObjectURL(file);
 
-    URL.revokeObjectURL(
-      currentObjectUrl
-    );
-  }
+  player.src=currentObjectUrl;
+  player.volume=Number(volumeSlider.value);
+  player.muted=false;
+  muted=false;
+  muteButton.textContent="Mute";
 
+  playButton.disabled=false;
+  pauseButton.disabled=false;
+  muteButton.disabled=false;
+  volumeSlider.disabled=false;
+  seekSlider.disabled=false;
 
-  currentObjectUrl =
-    URL.createObjectURL(
-      file
-    );
-
-
-  player.src =
-    currentObjectUrl;
-
-
-  player.volume =
-    Number(
-      volumeSlider.value
-    );
-
-
-  player.muted =
-    false;
-
-
-  muted =
-    false;
-
-
-  muteButton.textContent =
-    "Mute";
-
-
-  playButton.disabled =
-    false;
-
-
-  pauseButton.disabled =
-    false;
-
-
-  muteButton.disabled =
-    false;
-
-
-  volumeSlider.disabled =
-    false;
-
-
-  seekSlider.disabled =
-    false;
-
-
-  player.currentTime =
-    0;
-
-
+  player.currentTime=0;
   updateTime(0);
-
-
   analyzeAtTime(0);
 }
 
-
-
-fileInput.addEventListener(
-  "change",
-  async () => {
-
-    const file =
-      fileInput.files[0];
-
-
-    if(!file){
-      return;
-    }
-
-
-    try{
-
-      await loadFile(
-        file
-      );
-    }
-
-    catch(error){
-
-      console.error(
-        error
-      );
-
-
-      statusEl.textContent =
-        `Analysis failed: ${error.message}`;
-
-
-      statusEl.className =
-        "status fail";
-    }
+fileInput.addEventListener("change",async()=>{
+  const file=fileInput.files[0];
+  if(!file) return;
+  try{
+    await loadFile(file);
+  }catch(error){
+    console.error(error);
+    statusEl.textContent=`Analysis failed: ${error.message}`;
+    statusEl.className="status fail";
   }
-);
+});
 
+playButton.addEventListener("click",async()=>{
+  try{await player.play();}catch(error){console.error(error);}
+});
 
+pauseButton.addEventListener("click",()=>player.pause());
 
-playButton.addEventListener(
-  "click",
-  async () => {
+muteButton.addEventListener("click",()=>{
+  muted=!muted;
+  player.muted=muted;
+  muteButton.textContent=muted?"Unmute":"Mute";
+});
 
-    try{
+volumeSlider.addEventListener("input",()=>{
+  const value=Number(volumeSlider.value);
+  player.volume=value;
+  volumeValue.textContent=`${Math.round(value*100)}%`;
+});
 
-      await player.play();
-    }
+seekSlider.addEventListener("pointerdown",()=>{isScrubbing=true;});
 
-    catch(error){
+seekSlider.addEventListener("input",()=>{
+  isScrubbing=true;
+  scrubTargetTime=Number(seekSlider.value);
+  updateTime(scrubTargetTime);
 
-      console.error(
-        error
-      );
-    }
+  if(scrubTimer) clearTimeout(scrubTimer);
+
+  scrubTimer=setTimeout(()=>{
+    analyzeAtTime(scrubTargetTime);
+  },60);
+});
+
+seekSlider.addEventListener("change",()=>{
+  const targetTime=Number(seekSlider.value);
+
+  if(scrubTimer){
+    clearTimeout(scrubTimer);
+    scrubTimer=null;
   }
-);
 
+  analyzeAtTime(targetTime);
+  player.currentTime=targetTime;
+  updateTime(targetTime);
+  isScrubbing=false;
+});
 
+player.addEventListener("timeupdate",()=>{
+  if(isScrubbing) return;
 
-pauseButton.addEventListener(
-  "click",
-  () => {
+  seekSlider.value=player.currentTime;
+  updateTime(player.currentTime);
 
-    player.pause();
+  const now=performance.now();
+  if(now-lastSpectrumUpdate>150){
+    lastSpectrumUpdate=now;
+    analyzeAtTime(player.currentTime);
   }
-);
-
-
-
-muteButton.addEventListener(
-  "click",
-  () => {
-
-    muted =
-      !muted;
-
-
-    player.muted =
-      muted;
-
-
-    muteButton.textContent =
-      muted
-        ? "Unmute"
-        : "Mute";
-  }
-);
-
-
-
-volumeSlider.addEventListener(
-  "input",
-  () => {
-
-    const value =
-      Number(
-        volumeSlider.value
-      );
-
-
-    player.volume =
-      value;
-
-
-    volumeValue.textContent =
-      `${Math.round(
-        value *
-        100
-      )}%`;
-  }
-);
-
-
-
-seekSlider.addEventListener(
-  "pointerdown",
-  () => {
-
-    isScrubbing =
-      true;
-  }
-);
-
-
-
-seekSlider.addEventListener(
-  "input",
-  () => {
-
-    isScrubbing =
-      true;
-
-
-    scrubTargetTime =
-      Number(
-        seekSlider.value
-      );
-
-
-    updateTime(
-      scrubTargetTime
-    );
-
-
-    if(scrubTimer){
-
-      clearTimeout(
-        scrubTimer
-      );
-    }
-
-
-    scrubTimer =
-      setTimeout(
-        () => {
-
-          analyzeAtTime(
-            scrubTargetTime
-          );
-
-        },
-        60
-      );
-  }
-);
-
-
-
-seekSlider.addEventListener(
-  "change",
-  () => {
-
-    const targetTime =
-      Number(
-        seekSlider.value
-      );
-
-
-    if(scrubTimer){
-
-      clearTimeout(
-        scrubTimer
-      );
-
-      scrubTimer =
-        null;
-    }
-
-
-    analyzeAtTime(
-      targetTime
-    );
-
-
-    player.currentTime =
-      targetTime;
-
-
-    updateTime(
-      targetTime
-    );
-
-
-    isScrubbing =
-      false;
-  }
-);
-
-
-
-player.addEventListener(
-  "timeupdate",
-  () => {
-
-    if(isScrubbing){
-      return;
-    }
-
-
-    seekSlider.value =
-      player.currentTime;
-
-
-    updateTime(
-      player.currentTime
-    );
-
-
-    const now =
-      performance.now();
-
-
-    if(
-      now -
-      lastSpectrumUpdate >
-      150
-    ){
-
-      lastSpectrumUpdate =
-        now;
-
-
-      analyzeAtTime(
-        player.currentTime
-      );
-    }
-  }
-);
-
-
-
-player.addEventListener(
-  "seeked",
-  () => {
-
-    if(isScrubbing){
-      return;
-    }
-
-
-    seekSlider.value =
-      player.currentTime;
-
-
-    updateTime(
-      player.currentTime
-    );
-
-
-    analyzeAtTime(
-      player.currentTime
-    );
-  }
-);
-
-
-
-player.addEventListener(
-  "ended",
-  () => {
-
-    if(isScrubbing){
-      return;
-    }
-
-
-    seekSlider.value =
-      duration;
-
-
-    updateTime(
-      duration
-    );
-
-
-    analyzeAtTime(
-      duration
-    );
-  }
-);
-
-
+});
+
+player.addEventListener("seeked",()=>{
+  if(isScrubbing) return;
+  seekSlider.value=player.currentTime;
+  updateTime(player.currentTime);
+  analyzeAtTime(player.currentTime);
+});
+
+player.addEventListener("ended",()=>{
+  if(isScrubbing) return;
+  seekSlider.value=duration;
+  updateTime(duration);
+  analyzeAtTime(duration);
+});
 
 drawGrid();
-
 </script>
-
 </body>
 </html>
