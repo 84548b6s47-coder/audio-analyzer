@@ -1,310 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Professional Audio Analyzer</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professional Audio Analyzer</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+*{box-sizing:border-box}
 
-    body {
-      margin: 0;
-      background: #0b0f14;
-      color: #f5f7fa;
-      font-family: Arial, Helvetica, sans-serif;
-    }
+body{
+  margin:0;
+  background:#0b0f14;
+  color:#f5f7fa;
+  font-family:Arial,Helvetica,sans-serif
+}
 
-    .app {
-      width: min(1500px, 100%);
-      margin: 0 auto;
-      padding: 20px;
-    }
+.app{
+  width:min(1500px,100%);
+  margin:0 auto;
+  padding:20px
+}
 
-    h1 {
-      margin: 0 0 16px;
-      font-size: 28px;
-    }
+h1{
+  margin:0 0 16px;
+  font-size:28px
+}
 
-    .panel {
-      background: #111820;
-      border: 1px solid #26313d;
-      border-radius: 10px;
-      padding: 16px;
-      margin-top: 16px;
-    }
+.panel{
+  background:#111820;
+  border:1px solid #26313d;
+  border-radius:10px;
+  padding:16px;
+  margin-top:16px
+}
 
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-    }
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center
+}
 
-    button {
-      background: #1b2733;
-      color: #ffffff;
-      border: 1px solid #344556;
-      border-radius: 7px;
-      padding: 9px 14px;
-      cursor: pointer;
-    }
+button{
+  background:#1b2733;
+  color:#fff;
+  border:1px solid #344556;
+  border-radius:7px;
+  padding:9px 14px;
+  cursor:pointer
+}
 
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
+button:disabled{
+  opacity:.45;
+  cursor:not-allowed
+}
 
-    input[type="range"] {
-      accent-color: #d8ff4f;
-    }
+input[type="range"]{
+  accent-color:#d8ff4f
+}
 
-    .volume {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+.volume{
+  display:flex;
+  align-items:center;
+  gap:8px
+}
 
-    .volume input {
-      width: 150px;
-    }
+.volume input{
+  width:150px
+}
 
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-top: 16px;
-    }
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:10px;
+  margin-top:16px
+}
 
-    .metric {
-      background: #0b1118;
-      border: 1px solid #202b35;
-      border-radius: 8px;
-      padding: 10px;
-    }
+.metric{
+  background:#0b1118;
+  border:1px solid #202b35;
+  border-radius:8px;
+  padding:10px
+}
 
-    .metric-label {
-      color: #7f8e9c;
-      font-size: 12px;
-      margin-bottom: 5px;
-    }
+.metric-label{
+  color:#7f8e9c;
+  font-size:12px;
+  margin-bottom:5px
+}
 
-    .metric-value {
-      font-size: 17px;
-      font-weight: 700;
-    }
+.metric-value{
+  font-size:17px;
+  font-weight:700
+}
 
-    .status {
-      margin-top: 12px;
-      color: #91a0ae;
-      font-size: 13px;
-    }
+.status{
+  margin-top:12px;
+  color:#91a0ae;
+  font-size:13px
+}
 
-    .validation {
-      margin-top: 12px;
-      padding: 12px;
-      background: #0b1118;
-      border: 1px solid #202b35;
-      border-radius: 8px;
-      color: #9cacba;
-      font-size: 13px;
-      line-height: 1.75;
-    }
+.validation{
+  margin-top:12px;
+  padding:12px;
+  background:#0b1118;
+  border:1px solid #202b35;
+  border-radius:8px;
+  color:#9cacba;
+  font-size:13px;
+  line-height:1.75
+}
 
-    .validation:empty {
-      display: none;
-    }
+.validation:empty{
+  display:none
+}
 
-    .validation-title {
-      color: #ffffff;
-      font-weight: 700;
-      margin-bottom: 5px;
-    }
+.validation-title{
+  color:#fff;
+  font-weight:700;
+  margin-bottom:5px
+}
 
-    .pass {
-      color: #b9f66e;
-      font-weight: 700;
-    }
+.pass{
+  color:#b9f66e;
+  font-weight:700
+}
 
-    .fail {
-      color: #ff7c7c;
-      font-weight: 700;
-    }
+.fail{
+  color:#ff7c7c;
+  font-weight:700
+}
 
-    .info {
-      color: #ffd166;
-    }
+.info{
+  color:#ffd166
+}
 
-    canvas {
-      width: 100%;
-      height: 520px;
-      display: block;
-      background: #070b10;
-      border-radius: 8px;
-    }
+canvas{
+  width:100%;
+  height:520px;
+  display:block;
+  background:#070b10;
+  border-radius:8px
+}
 
-    .transport {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 12px;
-    }
+.transport{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:12px
+}
 
-    #seekSlider {
-      flex: 1;
-    }
+#seekSlider{
+  flex:1
+}
 
-    #timeDisplay {
-      min-width: 110px;
-      text-align: right;
-      color: #aab6c2;
-      font-size: 13px;
-    }
-  </style>
+#timeDisplay{
+  min-width:110px;
+  text-align:right;
+  color:#aab6c2;
+  font-size:13px
+}
+</style>
 </head>
 
 <body>
 
 <div class="app">
 
-  <h1>Professional Audio Analyzer</h1>
+<h1>Professional Audio Analyzer</h1>
 
-  <div class="panel">
+<div class="panel">
 
-    <div class="controls">
+<div class="controls">
 
-      <input
-        id="audioFile"
-        type="file"
-        accept=".wav,.mp3,audio/*"
-      />
+<input id="audioFile" type="file" accept=".wav,.mp3,audio/*">
 
-      <button id="playButton" disabled>Play</button>
-      <button id="pauseButton" disabled>Pause</button>
-      <button id="muteButton" disabled>Mute</button>
+<button id="playButton" disabled>Play</button>
+<button id="pauseButton" disabled>Pause</button>
+<button id="muteButton" disabled>Mute</button>
 
-      <div class="volume">
-        <span>Volume</span>
+<div class="volume">
+<span>Volume</span>
 
-        <input
-          id="volumeSlider"
-          type="range"
-          min="0"
-          max="1"
-          value="1"
-          step="0.01"
-          disabled
-        />
+<input
+  id="volumeSlider"
+  type="range"
+  min="0"
+  max="1"
+  value="1"
+  step="0.01"
+  disabled
+>
 
-        <strong id="volumeValue">100%</strong>
-      </div>
-
-    </div>
-
-
-    <div class="metrics">
-
-      <div class="metric">
-        <div class="metric-label">Source Sample Rate</div>
-        <div class="metric-value" id="sourceSampleRate">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Channels</div>
-        <div class="metric-value" id="channels">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Analysis Window</div>
-        <div class="metric-value">32768</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">FFT Transform</div>
-        <div class="metric-value">131072</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Nyquist</div>
-        <div class="metric-value" id="nyquist">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Duration</div>
-        <div class="metric-value" id="duration">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Peak L</div>
-        <div class="metric-value" id="peakL">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Peak R</div>
-        <div class="metric-value" id="peakR">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">RMS L</div>
-        <div class="metric-value" id="rmsL">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">RMS R</div>
-        <div class="metric-value" id="rmsR">-</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Spectrum Peak</div>
-        <div class="metric-value" id="spectrumPeak">-</div>
-      </div>
-
-    </div>
-
-    <div class="status" id="status">
-      Load a WAV or MP3 file.
-    </div>
-
-    <div class="validation" id="validation"></div>
-
-  </div>
-
-
-  <div class="panel">
-
-    <canvas
-      id="spectrumCanvas"
-      width="1400"
-      height="520"
-    ></canvas>
-
-    <div class="transport">
-
-      <input
-        id="seekSlider"
-        type="range"
-        min="0"
-        max="1"
-        value="0"
-        step="0.001"
-        disabled
-      />
-
-      <div id="timeDisplay">
-        0:00 / 0:00
-      </div>
-
-    </div>
-
-  </div>
+<strong id="volumeValue">100%</strong>
+</div>
 
 </div>
 
 
-<audio id="audioPlayer"></audio>
+<div class="metrics">
 
+<div class="metric">
+<div class="metric-label">Source Sample Rate</div>
+<div class="metric-value" id="sourceSampleRate">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Channels</div>
+<div class="metric-value" id="channels">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Analysis Window</div>
+<div class="metric-value">32768</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">FFT Transform</div>
+<div class="metric-value">131072</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Nyquist</div>
+<div class="metric-value" id="nyquist">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Duration</div>
+<div class="metric-value" id="duration">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Peak L</div>
+<div class="metric-value" id="peakL">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Peak R</div>
+<div class="metric-value" id="peakR">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">RMS L</div>
+<div class="metric-value" id="rmsL">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">RMS R</div>
+<div class="metric-value" id="rmsR">-</div>
+</div>
+
+<div class="metric">
+<div class="metric-label">Spectrum Peak</div>
+<div class="metric-value" id="spectrumPeak">-</div>
+</div>
+
+</div>
+
+<div class="status" id="status">
+Load a WAV or MP3 file.
+</div>
+
+<div class="validation" id="validation"></div>
+
+</div>
+
+
+<div class="panel">
+
+<canvas
+  id="spectrumCanvas"
+  width="1400"
+  height="520"
+></canvas>
+
+<div class="transport">
+
+<input
+  id="seekSlider"
+  type="range"
+  min="0"
+  max="1"
+  value="0"
+  step="0.001"
+  disabled
+>
+
+<div id="timeDisplay">
+0:00 / 0:00
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<audio id="audioPlayer"></audio>
 
 <script>
 
@@ -321,21 +313,38 @@ const SWEEP_START_FREQ = 20;
 const SWEEP_END_FREQ = 20000;
 
 
-const fileInput = document.getElementById("audioFile");
-const player = document.getElementById("audioPlayer");
+const fileInput =
+  document.getElementById("audioFile");
 
-const playButton = document.getElementById("playButton");
-const pauseButton = document.getElementById("pauseButton");
-const muteButton = document.getElementById("muteButton");
+const player =
+  document.getElementById("audioPlayer");
 
-const volumeSlider = document.getElementById("volumeSlider");
-const volumeValue = document.getElementById("volumeValue");
+const playButton =
+  document.getElementById("playButton");
 
-const seekSlider = document.getElementById("seekSlider");
-const timeDisplay = document.getElementById("timeDisplay");
+const pauseButton =
+  document.getElementById("pauseButton");
 
-const statusEl = document.getElementById("status");
-const validationEl = document.getElementById("validation");
+const muteButton =
+  document.getElementById("muteButton");
+
+const volumeSlider =
+  document.getElementById("volumeSlider");
+
+const volumeValue =
+  document.getElementById("volumeValue");
+
+const seekSlider =
+  document.getElementById("seekSlider");
+
+const timeDisplay =
+  document.getElementById("timeDisplay");
+
+const statusEl =
+  document.getElementById("status");
+
+const validationEl =
+  document.getElementById("validation");
 
 const sourceSampleRateEl =
   document.getElementById("sourceSampleRate");
@@ -392,12 +401,12 @@ let scrubTargetTime = 0;
 
 
 
-function linearToDb(value) {
+function linearToDb(value){
 
-  if (
+  if(
     !Number.isFinite(value) ||
     value <= 0
-  ) {
+  ){
     return -Infinity;
   }
 
@@ -406,9 +415,9 @@ function linearToDb(value) {
 
 
 
-function formatDb(value) {
+function formatDb(value){
 
-  if (!Number.isFinite(value)) {
+  if(!Number.isFinite(value)){
     return "-∞ dBFS";
   }
 
@@ -417,9 +426,9 @@ function formatDb(value) {
 
 
 
-function formatTime(seconds) {
+function formatTime(seconds){
 
-  if (!Number.isFinite(seconds)) {
+  if(!Number.isFinite(seconds)){
     return "0:00";
   }
 
@@ -432,13 +441,13 @@ function formatTime(seconds) {
   return (
     minutes +
     ":" +
-    secs.toString().padStart(2, "0")
+    secs.toString().padStart(2,"0")
   );
 }
 
 
 
-function freqToX(freq) {
+function freqToX(freq){
 
   const minLog =
     Math.log10(MIN_FREQ);
@@ -460,7 +469,7 @@ function freqToX(freq) {
 
 
 
-function dbToY(db) {
+function dbToY(db){
 
   const clamped =
     Math.max(
@@ -490,7 +499,7 @@ function dbToY(db) {
 
 
 
-function drawGrid() {
+function drawGrid(){
 
   const width =
     canvas.width;
@@ -540,10 +549,10 @@ function drawGrid() {
     "center";
 
 
-  for (
+  for(
     const freq
     of frequencies
-  ) {
+  ){
 
     const x =
       freqToX(freq);
@@ -554,8 +563,8 @@ function drawGrid() {
     ctx.lineWidth = 1;
 
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,height);
     ctx.stroke();
 
 
@@ -592,10 +601,10 @@ function drawGrid() {
     "left";
 
 
-  for (
+  for(
     const db
     of dbMarks
-  ) {
+  ){
 
     const y =
       dbToY(db);
@@ -604,8 +613,8 @@ function drawGrid() {
       "#15202a";
 
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
+    ctx.moveTo(0,y);
+    ctx.lineTo(width,y);
     ctx.stroke();
 
 
@@ -625,22 +634,20 @@ function drawGrid() {
 
 
 
-function calculatePeak(samples) {
+function calculatePeak(samples){
 
   let peak = 0;
 
-  for (
+  for(
     let i = 0;
     i < samples.length;
     i++
-  ) {
+  ){
 
     const value =
       Math.abs(samples[i]);
 
-    if (
-      value > peak
-    ) {
+    if(value > peak){
       peak = value;
     }
   }
@@ -650,21 +657,19 @@ function calculatePeak(samples) {
 
 
 
-function calculateRms(samples) {
+function calculateRms(samples){
 
-  if (
-    samples.length === 0
-  ) {
+  if(samples.length === 0){
     return 0;
   }
 
   let sum = 0;
 
-  for (
+  for(
     let i = 0;
     i < samples.length;
     i++
-  ) {
+  ){
 
     const value =
       samples[i];
@@ -682,11 +687,9 @@ function calculateRms(samples) {
 
 
 
-function buildMono() {
+function buildMono(){
 
-  if (
-    channelData.length === 0
-  ) {
+  if(channelData.length === 0){
     return null;
   }
 
@@ -694,14 +697,10 @@ function buildMono() {
     channelData[0].length;
 
   const output =
-    new Float32Array(
-      length
-    );
+    new Float32Array(length);
 
 
-  if (
-    channelData.length === 1
-  ) {
+  if(channelData.length === 1){
 
     output.set(
       channelData[0]
@@ -711,11 +710,11 @@ function buildMono() {
   }
 
 
-  for (
+  for(
     let i = 0;
     i < length;
     i++
-  ) {
+  ){
 
     output[i] =
       0.5 *
@@ -730,26 +729,24 @@ function buildMono() {
 
 
 
-function parseWav(arrayBuffer) {
+function parseWav(arrayBuffer){
 
   const view =
-    new DataView(
-      arrayBuffer
-    );
+    new DataView(arrayBuffer);
 
 
   function readString(
     offset,
     length
-  ) {
+  ){
 
     let result = "";
 
-    for (
+    for(
       let i = 0;
       i < length;
       i++
-    ) {
+    ){
 
       result +=
         String.fromCharCode(
@@ -763,17 +760,10 @@ function parseWav(arrayBuffer) {
   }
 
 
-  if (
-    readString(
-      0,
-      4
-    ) !== "RIFF" ||
-
-    readString(
-      8,
-      4
-    ) !== "WAVE"
-  ) {
+  if(
+    readString(0,4) !== "RIFF" ||
+    readString(8,4) !== "WAVE"
+  ){
 
     throw new Error(
       "Not a standard RIFF/WAVE file."
@@ -792,10 +782,10 @@ function parseWav(arrayBuffer) {
   let dataSize = null;
 
 
-  while (
+  while(
     offset + 8 <=
     view.byteLength
-  ) {
+  ){
 
     const chunkId =
       readString(
@@ -813,9 +803,7 @@ function parseWav(arrayBuffer) {
       offset + 8;
 
 
-    if (
-      chunkId === "fmt "
-    ) {
+    if(chunkId === "fmt "){
 
       audioFormat =
         view.getUint16(
@@ -843,9 +831,7 @@ function parseWav(arrayBuffer) {
     }
 
 
-    if (
-      chunkId === "data"
-    ) {
+    if(chunkId === "data"){
 
       dataOffset =
         chunkDataOffset;
@@ -866,10 +852,10 @@ function parseWav(arrayBuffer) {
   }
 
 
-  if (
+  if(
     dataOffset === null ||
     audioFormat === null
-  ) {
+  ){
 
     throw new Error(
       "Invalid WAV structure."
@@ -894,8 +880,7 @@ function parseWav(arrayBuffer) {
   const channels =
     Array.from(
       {
-        length:
-          numChannels
+        length:numChannels
       },
 
       () =>
@@ -905,12 +890,12 @@ function parseWav(arrayBuffer) {
     );
 
 
-  function readSample(position) {
+  function readSample(position){
 
-    if (
+    if(
       audioFormat === 3 &&
       bitsPerSample === 32
-    ) {
+    ){
 
       return view.getFloat32(
         position,
@@ -919,9 +904,7 @@ function parseWav(arrayBuffer) {
     }
 
 
-    if (
-      audioFormat !== 1
-    ) {
+    if(audioFormat !== 1){
 
       throw new Error(
         `Unsupported WAV format: ${audioFormat}`
@@ -929,22 +912,16 @@ function parseWav(arrayBuffer) {
     }
 
 
-    if (
-      bitsPerSample === 8
-    ) {
+    if(bitsPerSample === 8){
 
       return (
-        view.getUint8(
-          position
-        ) -
+        view.getUint8(position) -
         128
       ) / 128;
     }
 
 
-    if (
-      bitsPerSample === 16
-    ) {
+    if(bitsPerSample === 16){
 
       return (
         view.getInt16(
@@ -956,9 +933,7 @@ function parseWav(arrayBuffer) {
     }
 
 
-    if (
-      bitsPerSample === 24
-    ) {
+    if(bitsPerSample === 24){
 
       let value =
         view.getUint8(
@@ -980,10 +955,10 @@ function parseWav(arrayBuffer) {
         );
 
 
-      if (
+      if(
         value &
         0x800000
-      ) {
+      ){
 
         value |=
           0xff000000;
@@ -997,9 +972,7 @@ function parseWav(arrayBuffer) {
     }
 
 
-    if (
-      bitsPerSample === 32
-    ) {
+    if(bitsPerSample === 32){
 
       return (
         view.getInt32(
@@ -1021,26 +994,20 @@ function parseWav(arrayBuffer) {
     dataOffset;
 
 
-  for (
+  for(
     let frame = 0;
     frame < frameCount;
     frame++
-  ) {
+  ){
 
-    for (
+    for(
       let channel = 0;
       channel < numChannels;
       channel++
-    ) {
+    ){
 
-      channels[
-        channel
-      ][
-        frame
-      ] =
-        readSample(
-          position
-        );
+      channels[channel][frame] =
+        readSample(position);
 
       position +=
         bytesPerSample;
@@ -1049,6 +1016,7 @@ function parseWav(arrayBuffer) {
 
 
   return {
+
     sampleRate:
       wavSampleRate,
 
@@ -1060,6 +1028,7 @@ function parseWav(arrayBuffer) {
 
     bitsPerSample:
       bitsPerSample
+
   };
 }
 
@@ -1067,12 +1036,12 @@ function parseWav(arrayBuffer) {
 
 async function decodeWithBrowser(
   arrayBuffer
-) {
+){
 
   const context =
     new AudioContext();
 
-  try {
+  try{
 
     const decoded =
       await context.decodeAudioData(
@@ -1081,12 +1050,11 @@ async function decodeWithBrowser(
 
     const channels = [];
 
-    for (
+    for(
       let i = 0;
-      i <
-      decoded.numberOfChannels;
+      i < decoded.numberOfChannels;
       i++
-    ) {
+    ){
 
       channels.push(
         new Float32Array(
@@ -1097,6 +1065,7 @@ async function decodeWithBrowser(
 
 
     return {
+
       sampleRate:
         decoded.sampleRate,
 
@@ -1105,10 +1074,11 @@ async function decodeWithBrowser(
 
       frameCount:
         decoded.length
+
     };
   }
 
-  finally {
+  finally{
 
     await context.close();
   }
@@ -1119,7 +1089,7 @@ async function decodeWithBrowser(
 function bitReverse(
   real,
   imag
-) {
+){
 
   const n =
     real.length;
@@ -1127,19 +1097,17 @@ function bitReverse(
   let j = 0;
 
 
-  for (
+  for(
     let i = 1;
     i < n;
     i++
-  ) {
+  ){
 
     let bit =
       n >> 1;
 
 
-    while (
-      j & bit
-    ) {
+    while(j & bit){
 
       j ^=
         bit;
@@ -1153,9 +1121,7 @@ function bitReverse(
       bit;
 
 
-    if (
-      i < j
-    ) {
+    if(i < j){
 
       let temp =
         real[i];
@@ -1184,7 +1150,7 @@ function bitReverse(
 function fft(
   real,
   imag
-) {
+){
 
   const n =
     real.length;
@@ -1195,11 +1161,11 @@ function fft(
   );
 
 
-  for (
+  for(
     let length = 2;
     length <= n;
     length <<= 1
-  ) {
+  ){
 
     const half =
       length >> 1;
@@ -1216,21 +1182,21 @@ function fft(
       Math.sin(angle);
 
 
-    for (
+    for(
       let start = 0;
       start < n;
       start += length
-    ) {
+    ){
 
       let wReal = 1;
       let wImag = 0;
 
 
-      for (
+      for(
         let j = 0;
         j < half;
         j++
-      ) {
+      ){
 
         const even =
           start + j;
@@ -1305,12 +1271,12 @@ function fft(
 
 function calculateSpectrum(
   requestedTime
-) {
+){
 
-  if (
+  if(
     !monoData ||
     !sampleRate
-  ) {
+  ){
     return null;
   }
 
@@ -1353,19 +1319,14 @@ function calculateSpectrum(
     false;
 
 
-  if (
-    startSample < 0
-  ) {
+  if(startSample < 0){
 
     startSample = 0;
     edgeAdjusted = true;
   }
 
 
-  if (
-    startSample >
-    maxStart
-  ) {
+  if(startSample > maxStart){
 
     startSample =
       maxStart;
@@ -1398,11 +1359,11 @@ function calculateSpectrum(
   let windowSum = 0;
 
 
-  for (
+  for(
     let i = 0;
     i < WINDOW_SIZE;
     i++
-  ) {
+  ){
 
     const window =
       0.5 -
@@ -1474,11 +1435,11 @@ function calculateSpectrum(
     0;
 
 
-  for (
+  for(
     let k = 1;
     k < half;
     k++
-  ) {
+  ){
 
     const frequency =
       k *
@@ -1514,12 +1475,12 @@ function calculateSpectrum(
       db;
 
 
-    if (
+    if(
       Number.isFinite(db) &&
       db > peakDb &&
       frequency >= MIN_FREQ &&
       frequency <= MAX_FREQ
-    ) {
+    ){
 
       peakDb =
         db;
@@ -1533,11 +1494,11 @@ function calculateSpectrum(
   }
 
 
-  if (
+  if(
     peakBin > 1 &&
     peakBin <
     half - 1
-  ) {
+  ){
 
     const y1 =
       dbValues[
@@ -1561,7 +1522,7 @@ function calculateSpectrum(
       y3;
 
 
-    if (
+    if(
       Number.isFinite(
         denominator
       ) &&
@@ -1569,7 +1530,7 @@ function calculateSpectrum(
         denominator
       ) >
       1e-12
-    ) {
+    ){
 
       const delta =
         0.5 *
@@ -1612,6 +1573,7 @@ function calculateSpectrum(
     requestedTime,
     effectiveCenterTime,
     edgeAdjusted
+
   };
 }
 
@@ -1619,12 +1581,12 @@ function calculateSpectrum(
 
 function drawSpectrum(
   spectrum
-) {
+){
 
   drawGrid();
 
 
-  if (!spectrum) {
+  if(!spectrum){
     return;
   }
 
@@ -1644,29 +1606,23 @@ function drawSpectrum(
   );
 
 
-  for (
+  for(
     let i = 1;
     i <
     spectrum.frequencies.length;
     i++
-  ) {
+  ){
 
     const frequency =
       spectrum.frequencies[i];
 
 
-    if (
-      frequency <
-      MIN_FREQ
-    ) {
+    if(frequency < MIN_FREQ){
       continue;
     }
 
 
-    if (
-      frequency >
-      MAX_FREQ
-    ) {
+    if(frequency > MAX_FREQ){
       break;
     }
 
@@ -1675,9 +1631,7 @@ function drawSpectrum(
       spectrum.dbValues[i];
 
 
-    if (
-      !Number.isFinite(db)
-    ) {
+    if(!Number.isFinite(db)){
       continue;
     }
 
@@ -1690,12 +1644,11 @@ function drawSpectrum(
       );
 
 
-    if (
+    if(
       x >= 0 &&
       x < width &&
-      db >
-      pixelMax[x]
-    ) {
+      db > pixelMax[x]
+    ){
 
       pixelMax[x] =
         db;
@@ -1712,29 +1665,28 @@ function drawSpectrum(
 
 
   let started = false;
+
   let lastValidDb =
     DISPLAY_MIN_DB;
 
 
-  for (
+  for(
     let x = 0;
     x < width;
     x++
-  ) {
+  ){
 
     let db =
       pixelMax[x];
 
 
-    if (
-      !Number.isFinite(db)
-    ) {
+    if(!Number.isFinite(db)){
 
       db =
         lastValidDb;
     }
 
-    else {
+    else{
 
       lastValidDb =
         db;
@@ -1745,7 +1697,7 @@ function drawSpectrum(
       dbToY(db);
 
 
-    if (!started) {
+    if(!started){
 
       ctx.moveTo(
         x,
@@ -1755,7 +1707,7 @@ function drawSpectrum(
       started = true;
     }
 
-    else {
+    else{
 
       ctx.lineTo(
         x,
@@ -1774,56 +1726,99 @@ function drawSpectrum(
 
 
 
+/*
+  ==========================================================
+  IMPROVED SWEEP FREQUENCY TRACKER
+  ==========================================================
+
+  Old method:
+  measured period around the target,
+  then treated that period as if it
+  belonged exactly to target time.
+
+  Problem:
+  with a chirp, frequency is moving.
+  At 30–40 Hz one cycle is long enough
+  for this timing offset to matter.
+
+  New method:
+
+  1. Find precise positive zero crossings.
+  2. Each full period is defined by two crossings.
+  3. Frequency = sampleRate / period.
+  4. Assign that frequency measurement to the
+     MIDPOINT in time between those crossings.
+  5. Interpolate between neighboring midpoint
+     measurements at the requested analysis time.
+
+  For logarithmic sweeps we interpolate in
+  log-frequency, which matches exponential
+  frequency movement much better.
+*/
+
 function estimateFrequencyFromZeroCrossings(
   time
-) {
+){
 
-  if (
+  if(
     !monoData ||
     !sampleRate
-  ) {
+  ){
     return null;
   }
 
 
-  const center =
-    Math.round(
-      time *
-      sampleRate
+  const targetSample =
+    Math.max(
+      0,
+      Math.min(
+        monoData.length - 1,
+        time *
+        sampleRate
+      )
     );
 
+
+  /*
+    Use a wide enough area to guarantee
+    several complete cycles at low frequencies.
+  */
 
   const radius =
     Math.round(
       sampleRate *
-      0.12
+      0.40
     );
 
 
   const start =
     Math.max(
       1,
-      center -
-      radius
+      Math.floor(
+        targetSample -
+        radius
+      )
     );
 
 
   const end =
     Math.min(
       monoData.length - 1,
-      center +
-      radius
+      Math.ceil(
+        targetSample +
+        radius
+      )
     );
 
 
   const crossings = [];
 
 
-  for (
+  for(
     let i = start;
     i <= end;
     i++
-  ) {
+  ){
 
     const previous =
       monoData[
@@ -1834,12 +1829,12 @@ function estimateFrequencyFromZeroCrossings(
       monoData[i];
 
 
-    if (
+    if(
       previous <= 0 &&
       current > 0
-    ) {
+    ){
 
-      const denominator =
+      const difference =
         current -
         previous;
 
@@ -1847,169 +1842,246 @@ function estimateFrequencyFromZeroCrossings(
       let fraction = 0;
 
 
-      if (
+      if(
         Math.abs(
-          denominator
+          difference
         ) >
-        1e-12
-      ) {
+        1e-15
+      ){
+
+        /*
+          Linear interpolation gives
+          sub-sample zero-crossing position.
+        */
 
         fraction =
           -previous /
-          denominator;
+          difference;
       }
 
 
       crossings.push(
-        i -
-        1 +
+        (
+          i - 1
+        ) +
         fraction
       );
     }
   }
 
 
-  if (
-    crossings.length < 2
-  ) {
+  if(crossings.length < 3){
     return null;
   }
 
 
-  let nearest =
-    0;
+  /*
+    Convert crossing pairs into
+    frequency observations located
+    at PERIOD MIDPOINTS.
+  */
 
-  let nearestDistance =
-    Infinity;
+  const observations = [];
 
 
-  for (
-    let i = 0;
+  for(
+    let i = 1;
     i < crossings.length;
     i++
-  ) {
+  ){
 
-    const distance =
-      Math.abs(
-        crossings[i] -
-        center
-      );
+    const previousCrossing =
+      crossings[
+        i - 1
+      ];
 
 
-    if (
-      distance <
-      nearestDistance
-    ) {
+    const currentCrossing =
+      crossings[i];
 
-      nearestDistance =
-        distance;
 
-      nearest =
-        i;
+    const periodSamples =
+      currentCrossing -
+      previousCrossing;
+
+
+    if(
+      !Number.isFinite(
+        periodSamples
+      ) ||
+      periodSamples <= 0
+    ){
+      continue;
+    }
+
+
+    const frequency =
+      sampleRate /
+      periodSamples;
+
+
+    const midpointSample =
+      (
+        previousCrossing +
+        currentCrossing
+      ) /
+      2;
+
+
+    if(
+      Number.isFinite(
+        frequency
+      ) &&
+      frequency > 0
+    ){
+
+      observations.push({
+
+        sample:
+          midpointSample,
+
+        frequency:
+          frequency
+
+      });
     }
   }
 
 
-  const localPeriods = [];
-
-
-  for (
-    let offset = -3;
-    offset <= 3;
-    offset++
-  ) {
-
-    const index =
-      nearest +
-      offset;
-
-
-    if (
-      index > 0 &&
-      index <
-      crossings.length
-    ) {
-
-      const period =
-        crossings[index] -
-        crossings[index - 1];
-
-
-      if (
-        period > 0
-      ) {
-
-        localPeriods.push(
-          period
-        );
-      }
-    }
-  }
-
-
-  if (
-    localPeriods.length === 0
-  ) {
+  if(observations.length < 2){
     return null;
   }
 
 
-  localPeriods.sort(
-    (a, b) =>
-      a - b
-  );
+  /*
+    Find observations surrounding
+    the exact target sample.
+  */
+
+  let before = null;
+  let after = null;
 
 
-  const middle =
-    Math.floor(
-      localPeriods.length /
-      2
+  for(
+    let i = 0;
+    i < observations.length;
+    i++
+  ){
+
+    const observation =
+      observations[i];
+
+
+    if(
+      observation.sample <=
+      targetSample
+    ){
+
+      before =
+        observation;
+    }
+
+
+    if(
+      observation.sample >=
+      targetSample
+    ){
+
+      after =
+        observation;
+
+      break;
+    }
+  }
+
+
+  /*
+    Near file boundaries we may only
+    have measurements on one side.
+  */
+
+  if(
+    !before &&
+    after
+  ){
+
+    return after.frequency;
+  }
+
+
+  if(
+    before &&
+    !after
+  ){
+
+    return before.frequency;
+  }
+
+
+  if(
+    !before ||
+    !after
+  ){
+
+    return null;
+  }
+
+
+  if(
+    Math.abs(
+      after.sample -
+      before.sample
+    ) <
+    1e-12
+  ){
+
+    return before.frequency;
+  }
+
+
+  const interpolation =
+    (
+      targetSample -
+      before.sample
+    ) /
+    (
+      after.sample -
+      before.sample
     );
 
 
-  let medianPeriod;
+  /*
+    Log interpolation.
+
+    Since our sweep frequency grows
+    exponentially with time, interpolating
+    ln(frequency) is more appropriate
+    than plain linear frequency interpolation.
+  */
+
+  const logBefore =
+    Math.log(
+      before.frequency
+    );
 
 
-  if (
-    localPeriods.length %
-    2 === 0
-  ) {
-
-    medianPeriod =
-      (
-        localPeriods[
-          middle - 1
-        ] +
-        localPeriods[
-          middle
-        ]
-      ) /
-      2;
-  }
-
-  else {
-
-    medianPeriod =
-      localPeriods[
-        middle
-      ];
-  }
+  const logAfter =
+    Math.log(
+      after.frequency
+    );
 
 
-  if (
-    !Number.isFinite(
-      medianPeriod
-    ) ||
-    medianPeriod <= 0
-  ) {
-
-    return null;
-  }
+  const interpolatedLog =
+    logBefore +
+    interpolation *
+    (
+      logAfter -
+      logBefore
+    );
 
 
-  return (
-    sampleRate /
-    medianPeriod
+  return Math.exp(
+    interpolatedLog
   );
 }
 
@@ -2017,11 +2089,9 @@ function estimateFrequencyFromZeroCrossings(
 
 function expectedSweepFrequency(
   time
-) {
+){
 
-  if (
-    duration <= 0
-  ) {
+  if(duration <= 0){
     return null;
   }
 
@@ -2049,7 +2119,7 @@ function expectedSweepFrequency(
 
 
 
-function isSweepFile() {
+function isSweepFile(){
 
   const filename =
     fileInput.files[0]
@@ -2070,7 +2140,7 @@ function isSweepFile() {
 
 
 
-function getSteadyToneTest() {
+function getSteadyToneTest(){
 
   const filename =
     fileInput.files[0]
@@ -2079,44 +2149,44 @@ function getSteadyToneTest() {
     "";
 
 
-  if (
+  if(
     filename.includes(
       "100hz_-18dbfs"
     )
-  ) {
+  ){
 
     return {
-      frequency: 100,
-      peak: -18,
-      rms: -21.0103
+      frequency:100,
+      peak:-18,
+      rms:-21.0103
     };
   }
 
 
-  if (
+  if(
     filename.includes(
       "1khz_-18dbfs"
     )
-  ) {
+  ){
 
     return {
-      frequency: 1000,
-      peak: -18,
-      rms: -21.0103
+      frequency:1000,
+      peak:-18,
+      rms:-21.0103
     };
   }
 
 
-  if (
+  if(
     filename.includes(
       "10khz_-18dbfs"
     )
-  ) {
+  ){
 
     return {
-      frequency: 10000,
-      peak: -18,
-      rms: -21.0103
+      frequency:10000,
+      peak:-18,
+      rms:-21.0103
     };
   }
 
@@ -2128,7 +2198,7 @@ function getSteadyToneTest() {
 
 function passLabel(
   passed
-) {
+){
 
   return (
     `<span class="${passed ? "pass" : "fail"}">
@@ -2139,13 +2209,13 @@ function passLabel(
 
 
 
-function updateValidation() {
+function updateValidation(){
 
-  if (
+  if(
     measuredPeakLeft === null ||
     measuredRmsLeft === null ||
     !lastSpectrumResult
-  ) {
+  ){
 
     validationEl.innerHTML =
       "";
@@ -2158,9 +2228,7 @@ function updateValidation() {
     getSteadyToneTest();
 
 
-  if (
-    steadyTest
-  ) {
+  if(steadyTest){
 
     const peakError =
       Math.abs(
@@ -2246,9 +2314,7 @@ function updateValidation() {
   }
 
 
-  if (
-    isSweepFile()
-  ) {
+  if(isSweepFile()){
 
     const analysisTime =
       lastSpectrumResult
@@ -2267,14 +2333,14 @@ function updateValidation() {
       );
 
 
-    if (
+    if(
       !Number.isFinite(
         expected
       ) ||
       !Number.isFinite(
         measured
       )
-    ) {
+    ){
 
       validationEl.innerHTML =
         `
@@ -2312,18 +2378,21 @@ function updateValidation() {
       "";
 
 
-    if (
+    if(
       lastSpectrumResult
         .edgeAdjusted
-    ) {
+    ){
 
       edgeMessage =
         `
         <br>
+
         <span class="info">
           Edge-safe analysis:
-          requested position is ${lastSpectrumResult.requestedTime.toFixed(3)} s,
-          but the full FFT window is centered at ${analysisTime.toFixed(3)} s.
+          requested position is
+          ${lastSpectrumResult.requestedTime.toFixed(3)} s,
+          but the full FFT window is centered at
+          ${analysisTime.toFixed(3)} s.
         </span>
         `;
     }
@@ -2372,6 +2441,12 @@ function updateValidation() {
       <br>
 
       <span class="info">
+        Sweep tracker uses cycle-midpoint timing + log-frequency interpolation.
+      </span>
+
+      <br>
+
+      <span class="info">
         Sweep amplitude is intentionally not graded as a steady-sine amplitude test.
       </span>
       `;
@@ -2386,9 +2461,9 @@ function updateValidation() {
 
 
 
-function analyzeAtTime(time) {
+function analyzeAtTime(time){
 
-  if (!monoData) {
+  if(!monoData){
     return;
   }
 
@@ -2423,11 +2498,9 @@ function analyzeAtTime(time) {
 
 
 
-function updateMeasurements() {
+function updateMeasurements(){
 
-  if (
-    channelData.length === 0
-  ) {
+  if(channelData.length === 0){
     return;
   }
 
@@ -2503,21 +2576,15 @@ function updateMeasurements() {
 function updateTime(
   displayedTime =
     player.currentTime
-) {
+){
 
   timeDisplay.textContent =
-    `${formatTime(
-      displayedTime
-    )} / ${formatTime(
-      duration
-    )}`;
+    `${formatTime(displayedTime)} / ${formatTime(duration)}`;
 }
 
 
 
-async function loadFile(
-  file
-) {
+async function loadFile(file){
 
   statusEl.className =
     "status";
@@ -2534,13 +2601,13 @@ async function loadFile(
   let decoded;
 
 
-  if (
+  if(
     file.name
       .toLowerCase()
       .endsWith(".wav")
-  ) {
+  ){
 
-    try {
+    try{
 
       decoded =
         parseWav(
@@ -2552,13 +2619,9 @@ async function loadFile(
         "WAV decoded directly at source sample rate.";
     }
 
-    catch (
-      error
-    ) {
+    catch(error){
 
-      console.warn(
-        error
-      );
+      console.warn(error);
 
 
       decoded =
@@ -2572,7 +2635,7 @@ async function loadFile(
     }
   }
 
-  else {
+  else{
 
     decoded =
       await decodeWithBrowser(
@@ -2648,9 +2711,7 @@ async function loadFile(
   updateMeasurements();
 
 
-  if (
-    currentObjectUrl
-  ) {
+  if(currentObjectUrl){
 
     URL.revokeObjectURL(
       currentObjectUrl
@@ -2726,25 +2787,19 @@ fileInput.addEventListener(
       fileInput.files[0];
 
 
-    if (!file) {
+    if(!file){
       return;
     }
 
 
-    try {
+    try{
 
-      await loadFile(
-        file
-      );
+      await loadFile(file);
     }
 
-    catch (
-      error
-    ) {
+    catch(error){
 
-      console.error(
-        error
-      );
+      console.error(error);
 
 
       statusEl.textContent =
@@ -2763,18 +2818,14 @@ playButton.addEventListener(
   "click",
   async () => {
 
-    try {
+    try{
 
       await player.play();
     }
 
-    catch (
-      error
-    ) {
+    catch(error){
 
-      console.error(
-        error
-      );
+      console.error(error);
     }
   }
 );
@@ -2835,17 +2886,6 @@ volumeSlider.addEventListener(
 
 
 
-/*
-  SCRUB FIX
-
-  While the user drags the slider,
-  analysis follows the SLIDER value
-  directly.
-
-  We do NOT depend on player.currentTime
-  during the drag.
-*/
-
 seekSlider.addEventListener(
   "pointerdown",
   () => {
@@ -2876,18 +2916,7 @@ seekSlider.addEventListener(
     );
 
 
-    /*
-      Small debounce so the heavy
-      131072-point FFT does not run
-      hundreds of times per second.
-
-      Every completed analysis still
-      uses the exact slider position.
-    */
-
-    if (
-      scrubTimer
-    ) {
+    if(scrubTimer){
 
       clearTimeout(
         scrubTimer
@@ -2921,9 +2950,7 @@ seekSlider.addEventListener(
       );
 
 
-    if (
-      scrubTimer
-    ) {
+    if(scrubTimer){
 
       clearTimeout(
         scrubTimer
@@ -2934,20 +2961,10 @@ seekSlider.addEventListener(
     }
 
 
-    /*
-      Analyze exact final slider
-      position immediately.
-    */
-
     analyzeAtTime(
       targetTime
     );
 
-
-    /*
-      Only now do we tell the audio
-      element to seek there.
-    */
 
     player.currentTime =
       targetTime;
@@ -2969,16 +2986,7 @@ player.addEventListener(
   "timeupdate",
   () => {
 
-    /*
-      Browser playback updates must
-      never overwrite the slider while
-      the user is scrubbing.
-    */
-
-    if (
-      isScrubbing
-    ) {
-
+    if(isScrubbing){
       return;
     }
 
@@ -2996,11 +3004,11 @@ player.addEventListener(
       performance.now();
 
 
-    if (
+    if(
       now -
       lastSpectrumUpdate >
       150
-    ) {
+    ){
 
       lastSpectrumUpdate =
         now;
@@ -3019,9 +3027,7 @@ player.addEventListener(
   "seeked",
   () => {
 
-    if (
-      isScrubbing
-    ) {
+    if(isScrubbing){
       return;
     }
 
@@ -3047,9 +3053,7 @@ player.addEventListener(
   "ended",
   () => {
 
-    if (
-      isScrubbing
-    ) {
+    if(isScrubbing){
       return;
     }
 
