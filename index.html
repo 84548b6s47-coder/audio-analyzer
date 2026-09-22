@@ -65,7 +65,6 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-left: 6px;
     }
 
     .volume input {
@@ -104,10 +103,24 @@
     }
 
     .validation {
-      margin-top: 10px;
-      font-size: 13px;
-      line-height: 1.7;
+      margin-top: 12px;
+      padding: 12px;
+      background: #0b1118;
+      border: 1px solid #202b35;
+      border-radius: 8px;
       color: #9cacba;
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .validation:empty {
+      display: none;
+    }
+
+    .validation-title {
+      color: #ffffff;
+      font-weight: 700;
+      margin-bottom: 4px;
     }
 
     .pass {
@@ -118,6 +131,10 @@
     .fail {
       color: #ff7c7c;
       font-weight: 700;
+    }
+
+    .info {
+      color: #ffd166;
     }
 
     canvas {
@@ -140,7 +157,7 @@
     }
 
     #timeDisplay {
-      min-width: 105px;
+      min-width: 110px;
       text-align: right;
       color: #aab6c2;
       font-size: 13px;
@@ -210,12 +227,12 @@
 
       <div class="metric">
         <div class="metric-label">Analysis Window</div>
-        <div class="metric-value" id="analysisWindow">32768</div>
+        <div class="metric-value">32768</div>
       </div>
 
       <div class="metric">
         <div class="metric-label">FFT Transform</div>
-        <div class="metric-value" id="fftTransform">131072</div>
+        <div class="metric-value">131072</div>
       </div>
 
       <div class="metric">
@@ -302,20 +319,6 @@
 
 const WINDOW_SIZE = 32768;
 
-/*
-  4x zero-padding.
-
-  Real audio samples:
-  32768
-
-  FFT calculation:
-  131072
-
-  This gives much denser sampling
-  of the Hann-window spectral peak
-  without changing the original audio.
-*/
-
 const FFT_SIZE =
   WINDOW_SIZE * 4;
 
@@ -324,6 +327,9 @@ const MAX_FREQ = 20000;
 
 const DISPLAY_MIN_DB = -100;
 const DISPLAY_MAX_DB = 0;
+
+const SWEEP_START_FREQ = 20;
+const SWEEP_END_FREQ = 20000;
 
 
 const fileInput =
@@ -396,18 +402,18 @@ const ctx =
 let currentObjectUrl = null;
 
 let sampleRate = 0;
-
 let channelData = [];
-
 let monoData = null;
 
 let duration = 0;
 
 let muted = false;
 
-let lastSpectrumUpdate = 0;
+let measuredPeakLeft = null;
+let measuredRmsLeft = null;
 
 let lastSpectrumResult = null;
+let lastSpectrumUpdate = 0;
 
 
 
@@ -420,11 +426,7 @@ function linearToDb(value) {
     return -Infinity;
   }
 
-  return (
-    20 *
-    Math.log10(value)
-  );
-
+  return 20 * Math.log10(value);
 }
 
 
@@ -437,10 +439,7 @@ function formatDb(value) {
     return "-∞ dBFS";
   }
 
-  return (
-    `${value.toFixed(2)} dBFS`
-  );
-
+  return `${value.toFixed(2)} dBFS`;
 }
 
 
@@ -454,26 +453,18 @@ function formatTime(seconds) {
   }
 
   const minutes =
-    Math.floor(
-      seconds / 60
-    );
+    Math.floor(seconds / 60);
 
   const secs =
-    Math.floor(
-      seconds % 60
-    );
+    Math.floor(seconds % 60);
 
   return (
     minutes +
     ":" +
     secs
       .toString()
-      .padStart(
-        2,
-        "0"
-      )
+      .padStart(2, "0")
   );
-
 }
 
 
@@ -496,11 +487,7 @@ function freqToX(freq) {
       minLog
     );
 
-  return (
-    normalized *
-    canvas.width
-  );
-
+  return normalized * canvas.width;
 }
 
 
@@ -531,7 +518,6 @@ function dbToY(db) {
     normalized *
     canvas.height
   );
-
 }
 
 
@@ -544,14 +530,12 @@ function drawGrid() {
   const height =
     canvas.height;
 
-
   ctx.clearRect(
     0,
     0,
     width,
     height
   );
-
 
   ctx.fillStyle =
     "#070b10";
@@ -595,7 +579,6 @@ function drawGrid() {
 
     const x =
       freqToX(freq);
-
 
     ctx.strokeStyle =
       "#1a2530";
@@ -663,7 +646,6 @@ function drawGrid() {
     const y =
       dbToY(db);
 
-
     ctx.strokeStyle =
       "#15202a";
 
@@ -704,7 +686,6 @@ function calculatePeak(samples) {
 
   let peak = 0;
 
-
   for (
     let i = 0;
     i < samples.length;
@@ -716,21 +697,15 @@ function calculatePeak(samples) {
         samples[i]
       );
 
-
     if (
       value > peak
     ) {
-
-      peak =
-        value;
-
+      peak = value;
     }
 
   }
 
-
   return peak;
-
 }
 
 
@@ -743,9 +718,7 @@ function calculateRms(samples) {
     return 0;
   }
 
-
   let sum = 0;
-
 
   for (
     let i = 0;
@@ -756,19 +729,16 @@ function calculateRms(samples) {
     const value =
       samples[i];
 
-
     sum +=
       value *
       value;
 
   }
 
-
   return Math.sqrt(
     sum /
     samples.length
   );
-
 }
 
 
@@ -781,10 +751,8 @@ function buildMono() {
     return null;
   }
 
-
   const length =
     channelData[0].length;
-
 
   const output =
     new Float32Array(
@@ -801,7 +769,6 @@ function buildMono() {
     );
 
     return output;
-
   }
 
 
@@ -820,9 +787,7 @@ function buildMono() {
 
   }
 
-
   return output;
-
 }
 
 
@@ -842,7 +807,6 @@ function parseWav(arrayBuffer) {
 
     let result = "";
 
-
     for (
       let i = 0;
       i < length;
@@ -855,12 +819,9 @@ function parseWav(arrayBuffer) {
             offset + i
           )
         );
-
     }
 
-
     return result;
-
   }
 
 
@@ -879,22 +840,17 @@ function parseWav(arrayBuffer) {
     throw new Error(
       "Not a standard RIFF/WAVE file."
     );
-
   }
 
 
   let offset = 12;
 
   let audioFormat = null;
-
   let numChannels = null;
-
   let wavSampleRate = null;
-
   let bitsPerSample = null;
 
   let dataOffset = null;
-
   let dataSize = null;
 
 
@@ -909,13 +865,11 @@ function parseWav(arrayBuffer) {
         4
       );
 
-
     const chunkSize =
       view.getUint32(
         offset + 4,
         true
       );
-
 
     const chunkDataOffset =
       offset + 8;
@@ -931,13 +885,11 @@ function parseWav(arrayBuffer) {
           true
         );
 
-
       numChannels =
         view.getUint16(
           chunkDataOffset + 2,
           true
         );
-
 
       wavSampleRate =
         view.getUint32(
@@ -945,13 +897,11 @@ function parseWav(arrayBuffer) {
           true
         );
 
-
       bitsPerSample =
         view.getUint16(
           chunkDataOffset + 14,
           true
         );
-
     }
 
 
@@ -962,13 +912,10 @@ function parseWav(arrayBuffer) {
       dataOffset =
         chunkDataOffset;
 
-
       dataSize =
         chunkSize;
 
-
       break;
-
     }
 
 
@@ -978,7 +925,6 @@ function parseWav(arrayBuffer) {
       (
         chunkSize % 2
       );
-
   }
 
 
@@ -988,21 +934,17 @@ function parseWav(arrayBuffer) {
   ) {
 
     throw new Error(
-      "Invalid or unsupported WAV structure."
+      "Invalid WAV structure."
     );
-
   }
 
 
   const bytesPerSample =
-    bitsPerSample /
-    8;
-
+    bitsPerSample / 8;
 
   const frameSize =
     bytesPerSample *
     numChannels;
-
 
   const frameCount =
     Math.floor(
@@ -1017,7 +959,6 @@ function parseWav(arrayBuffer) {
         length:
           numChannels
       },
-
       () =>
         new Float32Array(
           frameCount
@@ -1025,22 +966,17 @@ function parseWav(arrayBuffer) {
     );
 
 
-  function readSample(
-    position
-  ) {
+  function readSample(position) {
 
     if (
       audioFormat === 3 &&
       bitsPerSample === 32
     ) {
 
-      return (
-        view.getFloat32(
-          position,
-          true
-        )
+      return view.getFloat32(
+        position,
+        true
       );
-
     }
 
 
@@ -1051,7 +987,6 @@ function parseWav(arrayBuffer) {
       throw new Error(
         `Unsupported WAV format: ${audioFormat}`
       );
-
     }
 
 
@@ -1060,15 +995,11 @@ function parseWav(arrayBuffer) {
     ) {
 
       return (
-        (
-          view.getUint8(
-            position
-          ) -
-          128
-        ) /
+        view.getUint8(
+          position
+        ) -
         128
-      );
-
+      ) / 128;
     }
 
 
@@ -1083,7 +1014,6 @@ function parseWav(arrayBuffer) {
         ) /
         32768
       );
-
     }
 
 
@@ -1118,7 +1048,6 @@ function parseWav(arrayBuffer) {
 
         value |=
           0xff000000;
-
       }
 
 
@@ -1126,7 +1055,6 @@ function parseWav(arrayBuffer) {
         value /
         8388608
       );
-
     }
 
 
@@ -1141,14 +1069,12 @@ function parseWav(arrayBuffer) {
         ) /
         2147483648
       );
-
     }
 
 
     throw new Error(
       `Unsupported WAV bit depth: ${bitsPerSample}`
     );
-
   }
 
 
@@ -1177,12 +1103,9 @@ function parseWav(arrayBuffer) {
           position
         );
 
-
       position +=
         bytesPerSample;
-
     }
-
   }
 
 
@@ -1201,7 +1124,6 @@ function parseWav(arrayBuffer) {
       bitsPerSample
 
   };
-
 }
 
 
@@ -1213,7 +1135,6 @@ async function decodeWithBrowser(
   const context =
     new AudioContext();
 
-
   try {
 
     const decoded =
@@ -1221,9 +1142,7 @@ async function decodeWithBrowser(
         arrayBuffer.slice(0)
       );
 
-
     const channels = [];
-
 
     for (
       let i = 0;
@@ -1233,13 +1152,10 @@ async function decodeWithBrowser(
     ) {
 
       channels.push(
-
         new Float32Array(
           decoded.getChannelData(i)
         )
-
       );
-
     }
 
 
@@ -1256,7 +1172,6 @@ async function decodeWithBrowser(
 
       browserDecoded:
         true
-
     };
 
   }
@@ -1264,9 +1179,7 @@ async function decodeWithBrowser(
   finally {
 
     await context.close();
-
   }
-
 }
 
 
@@ -1278,7 +1191,6 @@ function bitReverse(
 
   const n =
     real.length;
-
 
   let j = 0;
 
@@ -1300,10 +1212,8 @@ function bitReverse(
       j ^=
         bit;
 
-
       bit >>=
         1;
-
     }
 
 
@@ -1318,10 +1228,8 @@ function bitReverse(
       let temp =
         real[i];
 
-
       real[i] =
         real[j];
-
 
       real[j] =
         temp;
@@ -1330,18 +1238,13 @@ function bitReverse(
       temp =
         imag[i];
 
-
       imag[i] =
         imag[j];
 
-
       imag[j] =
         temp;
-
     }
-
   }
-
 }
 
 
@@ -1353,7 +1256,6 @@ function fft(
 
   const n =
     real.length;
-
 
   bitReverse(
     real,
@@ -1370,18 +1272,15 @@ function fft(
     const half =
       length >> 1;
 
-
     const angle =
       -2 *
       Math.PI /
       length;
 
-
     const wLengthReal =
       Math.cos(
         angle
       );
-
 
     const wLengthImag =
       Math.sin(
@@ -1396,7 +1295,6 @@ function fft(
     ) {
 
       let wReal = 1;
-
       let wImag = 0;
 
 
@@ -1408,7 +1306,6 @@ function fft(
 
         const even =
           start + j;
-
 
         const odd =
           even + half;
@@ -1431,7 +1328,6 @@ function fft(
         const evenReal =
           real[even];
 
-
         const evenImag =
           imag[even];
 
@@ -1440,16 +1336,13 @@ function fft(
           evenReal +
           oddReal;
 
-
         imag[even] =
           evenImag +
           oddImag;
 
-
         real[odd] =
           evenReal -
           oddReal;
-
 
         imag[odd] =
           evenImag -
@@ -1473,16 +1366,11 @@ function fft(
         wReal =
           nextWReal;
 
-
         wImag =
           nextWImag;
-
       }
-
     }
-
   }
-
 }
 
 
@@ -1497,7 +1385,6 @@ function calculateSpectrum(
   ) {
 
     return null;
-
   }
 
 
@@ -1528,21 +1415,18 @@ function calculateSpectrum(
     );
 
 
-  /*
-    FFT arrays are 4x larger
-    than the actual audio window.
+  const effectiveCenterTime =
+    (
+      startSample +
+      WINDOW_SIZE / 2
+    ) /
+    sampleRate;
 
-    Samples occupy the first
-    WINDOW_SIZE positions.
-
-    Remaining values stay zero.
-  */
 
   const real =
     new Float64Array(
       FFT_SIZE
     );
-
 
   const imag =
     new Float64Array(
@@ -1594,7 +1478,6 @@ function calculateSpectrum(
     real[i] =
       sample *
       window;
-
   }
 
 
@@ -1605,8 +1488,7 @@ function calculateSpectrum(
 
 
   const half =
-    FFT_SIZE /
-    2;
+    FFT_SIZE / 2;
 
 
   const frequencies =
@@ -1624,10 +1506,8 @@ function calculateSpectrum(
   let peakDb =
     -Infinity;
 
-
   let peakFrequency =
     0;
-
 
   let peakBin =
     0;
@@ -1654,15 +1534,6 @@ function calculateSpectrum(
       );
 
 
-    /*
-      Correct single-sided
-      sine amplitude.
-
-      Hann coherent gain
-      compensation is contained
-      in windowSum.
-    */
-
     const amplitude =
       2 *
       magnitude /
@@ -1678,7 +1549,6 @@ function calculateSpectrum(
     frequencies[k] =
       frequency;
 
-
     dbValues[k] =
       db;
 
@@ -1693,26 +1563,14 @@ function calculateSpectrum(
       peakDb =
         db;
 
-
       peakFrequency =
         frequency;
 
-
       peakBin =
         k;
-
     }
-
   }
 
-
-  /*
-    Parabolic interpolation
-    around the strongest bin.
-
-    This improves frequency
-    estimation further.
-  */
 
   if (
     peakBin > 1 &&
@@ -1725,12 +1583,10 @@ function calculateSpectrum(
         peakBin - 1
       ];
 
-
     const y2 =
       dbValues[
         peakBin
       ];
-
 
     const y3 =
       dbValues[
@@ -1766,21 +1622,14 @@ function calculateSpectrum(
           denominator;
 
 
-        const interpolatedBin =
-          peakBin +
-          delta;
-
-
         peakFrequency =
-          interpolatedBin *
+          (
+            peakBin +
+            delta
+          ) *
           sampleRate /
           FFT_SIZE;
 
-
-        /*
-          Interpolated peak height
-          in log-amplitude domain.
-        */
 
         peakDb =
           y2 -
@@ -1790,30 +1639,21 @@ function calculateSpectrum(
             y3
           ) *
           delta;
-
       }
-
     }
-
   }
 
 
   return {
 
-    frequencies:
-      frequencies,
+    frequencies,
+    dbValues,
 
-    dbValues:
-      dbValues,
+    peakDb,
+    peakFrequency,
 
-    peakDb:
-      peakDb,
-
-    peakFrequency:
-      peakFrequency
-
+    effectiveCenterTime
   };
-
 }
 
 
@@ -1828,9 +1668,7 @@ function drawSpectrum(
   if (
     !spectrum
   ) {
-
     return;
-
   }
 
 
@@ -1864,9 +1702,7 @@ function drawSpectrum(
       frequency <
       MIN_FREQ
     ) {
-
       continue;
-
     }
 
 
@@ -1874,9 +1710,7 @@ function drawSpectrum(
       frequency >
       MAX_FREQ
     ) {
-
       break;
-
     }
 
 
@@ -1887,9 +1721,7 @@ function drawSpectrum(
     if (
       !Number.isFinite(db)
     ) {
-
       continue;
-
     }
 
 
@@ -1910,26 +1742,19 @@ function drawSpectrum(
 
       pixelMax[x] =
         db;
-
     }
-
   }
 
 
   ctx.strokeStyle =
     "#d8ff4f";
 
-
-  ctx.lineWidth =
-    2;
-
+  ctx.lineWidth = 2;
 
   ctx.beginPath();
 
 
-  let started =
-    false;
-
+  let started = false;
 
   let lastValidDb =
     DISPLAY_MIN_DB;
@@ -1951,14 +1776,12 @@ function drawSpectrum(
 
       db =
         lastValidDb;
-
     }
 
     else {
 
       lastValidDb =
         db;
-
     }
 
 
@@ -1975,10 +1798,7 @@ function drawSpectrum(
         y
       );
 
-
-      started =
-        true;
-
+      started = true;
     }
 
     else {
@@ -1987,26 +1807,581 @@ function drawSpectrum(
         x,
         y
       );
-
     }
-
   }
 
 
   ctx.stroke();
 
 
+  spectrumPeakEl.textContent =
+    `${spectrum.peakFrequency.toFixed(2)} Hz / ${spectrum.peakDb.toFixed(2)} dBFS`;
+}
+
+
+
+function estimateSweepFrequencyFromZeroCrossings(
+  time
+) {
+
   if (
-    Number.isFinite(
-      spectrum.peakDb
+    !monoData ||
+    !sampleRate
+  ) {
+
+    return null;
+  }
+
+
+  const center =
+    Math.floor(
+      time *
+      sampleRate
+    );
+
+
+  const searchRadius =
+    Math.floor(
+      sampleRate *
+      0.35
+    );
+
+
+  const start =
+    Math.max(
+      1,
+      center -
+      searchRadius
+    );
+
+
+  const end =
+    Math.min(
+      monoData.length - 1,
+      center +
+      searchRadius
+    );
+
+
+  const crossings = [];
+
+
+  for (
+    let i = start;
+    i < end;
+    i++
+  ) {
+
+    const previous =
+      monoData[i - 1];
+
+    const current =
+      monoData[i];
+
+
+    if (
+      previous <= 0 &&
+      current > 0
+    ) {
+
+      const denominator =
+        current -
+        previous;
+
+
+      let fraction = 0;
+
+
+      if (
+        Math.abs(
+          denominator
+        ) >
+        1e-12
+      ) {
+
+        fraction =
+          -previous /
+          denominator;
+      }
+
+
+      crossings.push(
+        i -
+        1 +
+        fraction
+      );
+    }
+  }
+
+
+  if (
+    crossings.length < 3
+  ) {
+
+    return null;
+  }
+
+
+  let nearestIndex = 0;
+
+  let nearestDistance =
+    Infinity;
+
+
+  for (
+    let i = 0;
+    i < crossings.length;
+    i++
+  ) {
+
+    const distance =
+      Math.abs(
+        crossings[i] -
+        center
+      );
+
+
+    if (
+      distance <
+      nearestDistance
+    ) {
+
+      nearestDistance =
+        distance;
+
+      nearestIndex =
+        i;
+    }
+  }
+
+
+  const periods = [];
+
+
+  const first =
+    Math.max(
+      1,
+      nearestIndex - 2
+    );
+
+
+  const last =
+    Math.min(
+      crossings.length - 1,
+      nearestIndex + 2
+    );
+
+
+  for (
+    let i = first;
+    i <= last;
+    i++
+  ) {
+
+    const period =
+      crossings[i] -
+      crossings[i - 1];
+
+
+    if (
+      period > 0
+    ) {
+
+      periods.push(
+        period
+      );
+    }
+  }
+
+
+  if (
+    periods.length === 0
+  ) {
+
+    return null;
+  }
+
+
+  periods.sort(
+    (a, b) =>
+      a - b
+  );
+
+
+  const median =
+    periods[
+      Math.floor(
+        periods.length /
+        2
+      )
+    ];
+
+
+  if (
+    !Number.isFinite(
+      median
+    ) ||
+    median <= 0
+  ) {
+
+    return null;
+  }
+
+
+  return (
+    sampleRate /
+    median
+  );
+}
+
+
+
+function expectedSweepFrequency(
+  time
+) {
+
+  if (
+    duration <= 0
+  ) {
+
+    return null;
+  }
+
+
+  const normalizedTime =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        time /
+        duration
+      )
+    );
+
+
+  return (
+    SWEEP_START_FREQ *
+    Math.pow(
+      SWEEP_END_FREQ /
+      SWEEP_START_FREQ,
+      normalizedTime
+    )
+  );
+}
+
+
+
+function isSweepFile() {
+
+  const filename =
+    fileInput.files[0]
+      ?.name
+      ?.toLowerCase() ||
+    "";
+
+
+  return (
+    filename.includes(
+      "20hz_to_20khz"
+    ) &&
+    filename.includes(
+      "sweep"
+    )
+  );
+}
+
+
+
+function getSteadyToneTest() {
+
+  const filename =
+    fileInput.files[0]
+      ?.name
+      ?.toLowerCase() ||
+    "";
+
+
+  if (
+    filename.includes(
+      "100hz_-18dbfs"
     )
   ) {
 
-    spectrumPeakEl.textContent =
-      `${spectrum.peakFrequency.toFixed(2)} Hz / ${spectrum.peakDb.toFixed(2)} dBFS`;
-
+    return {
+      frequency: 100,
+      peak: -18,
+      rms: -21.0103
+    };
   }
 
+
+  if (
+    filename.includes(
+      "1khz_-18dbfs"
+    )
+  ) {
+
+    return {
+      frequency: 1000,
+      peak: -18,
+      rms: -21.0103
+    };
+  }
+
+
+  if (
+    filename.includes(
+      "10khz_-18dbfs"
+    )
+  ) {
+
+    return {
+      frequency: 10000,
+      peak: -18,
+      rms: -21.0103
+    };
+  }
+
+
+  return null;
+}
+
+
+
+function passLabel(
+  passed
+) {
+
+  return (
+    `<span class="${passed ? "pass" : "fail"}">
+      ${passed ? "PASS" : "FAIL"}
+    </span>`
+  );
+}
+
+
+
+function updateValidation() {
+
+  if (
+    measuredPeakLeft === null ||
+    measuredRmsLeft === null ||
+    !lastSpectrumResult
+  ) {
+
+    validationEl.innerHTML =
+      "";
+
+    return;
+  }
+
+
+  const steadyTest =
+    getSteadyToneTest();
+
+
+  if (
+    steadyTest
+  ) {
+
+    const peakError =
+      Math.abs(
+        measuredPeakLeft -
+        steadyTest.peak
+      );
+
+
+    const rmsError =
+      Math.abs(
+        measuredRmsLeft -
+        steadyTest.rms
+      );
+
+
+    const frequencyError =
+      Math.abs(
+        lastSpectrumResult
+          .peakFrequency -
+        steadyTest.frequency
+      );
+
+
+    const spectrumError =
+      Math.abs(
+        lastSpectrumResult
+          .peakDb -
+        steadyTest.peak
+      );
+
+
+    validationEl.innerHTML =
+      `
+      <div class="validation-title">
+        Calibration — ${steadyTest.frequency} Hz / -18 dBFS
+      </div>
+
+      Peak:
+      expected ${steadyTest.peak.toFixed(3)} dBFS —
+      measured ${measuredPeakLeft.toFixed(3)} dBFS —
+      error ${peakError.toFixed(3)} dB —
+      ${passLabel(
+        peakError <= 0.05
+      )}
+
+      <br>
+
+      RMS:
+      expected ${steadyTest.rms.toFixed(3)} dBFS —
+      measured ${measuredRmsLeft.toFixed(3)} dBFS —
+      error ${rmsError.toFixed(3)} dB —
+      ${passLabel(
+        rmsError <= 0.05
+      )}
+
+      <br>
+
+      Frequency:
+      expected ${steadyTest.frequency.toFixed(3)} Hz —
+      measured ${lastSpectrumResult.peakFrequency.toFixed(3)} Hz —
+      error ${frequencyError.toFixed(3)} Hz —
+      ${passLabel(
+        frequencyError <=
+        Math.max(
+          1,
+          steadyTest.frequency *
+          0.001
+        )
+      )}
+
+      <br>
+
+      Spectrum amplitude:
+      expected ${steadyTest.peak.toFixed(3)} dBFS —
+      measured ${lastSpectrumResult.peakDb.toFixed(3)} dBFS —
+      error ${spectrumError.toFixed(3)} dB —
+      ${passLabel(
+        spectrumError <= 0.10
+      )}
+      `;
+
+    return;
+  }
+
+
+  if (
+    isSweepFile()
+  ) {
+
+    const analysisTime =
+      Math.max(
+        0,
+        Math.min(
+          duration,
+          player.currentTime
+        )
+      );
+
+
+    const expected =
+      expectedSweepFrequency(
+        analysisTime
+      );
+
+
+    const measured =
+      estimateSweepFrequencyFromZeroCrossings(
+        analysisTime
+      );
+
+
+    if (
+      !Number.isFinite(
+        expected
+      ) ||
+      !Number.isFinite(
+        measured
+      )
+    ) {
+
+      validationEl.innerHTML =
+        `
+        <div class="validation-title">
+          Log Sweep Validation
+        </div>
+
+        Measurement unavailable at this position.
+        `;
+
+      return;
+    }
+
+
+    const errorHz =
+      Math.abs(
+        measured -
+        expected
+      );
+
+
+    const errorPercent =
+      (
+        errorHz /
+        expected
+      ) *
+      100;
+
+
+    const pass =
+      errorPercent <= 2;
+
+
+    validationEl.innerHTML =
+      `
+      <div class="validation-title">
+        Log Sweep Tracking
+      </div>
+
+      Time:
+      ${analysisTime.toFixed(3)} s
+
+      <br>
+
+      Expected frequency:
+      <strong>${expected.toFixed(2)} Hz</strong>
+
+      <br>
+
+      Measured frequency:
+      <strong>${measured.toFixed(2)} Hz</strong>
+
+      <br>
+
+      Error:
+      ${errorHz.toFixed(2)} Hz
+      (${errorPercent.toFixed(2)}%)
+
+      —
+      ${passLabel(pass)}
+
+      <br>
+
+      FFT peak currently displayed:
+      ${lastSpectrumResult.peakFrequency.toFixed(2)} Hz
+
+      <br>
+
+      <span class="info">
+        Sweep amplitude is not graded against -18 dBFS because
+        a changing-frequency chirp spreads energy across multiple FFT bins.
+      </span>
+      `;
+
+    return;
+  }
+
+
+  validationEl.innerHTML =
+    "";
 }
 
 
@@ -2018,7 +2393,6 @@ function updateSpectrumNow() {
   ) {
 
     return;
-
   }
 
 
@@ -2037,18 +2411,8 @@ function updateSpectrumNow() {
   );
 
 
-  updateCalibration();
-
+  updateValidation();
 }
-
-
-
-let measuredPeakLeft =
-  null;
-
-
-let measuredRmsLeft =
-  null;
 
 
 
@@ -2059,7 +2423,6 @@ function updateMeasurements() {
   ) {
 
     return;
-
   }
 
 
@@ -2081,7 +2444,7 @@ function updateMeasurements() {
     );
 
 
-  const peakRight =
+  const measuredPeakRight =
     linearToDb(
       calculatePeak(
         right
@@ -2097,7 +2460,7 @@ function updateMeasurements() {
     );
 
 
-  const rmsRight =
+  const measuredRmsRight =
     linearToDb(
       calculateRms(
         right
@@ -2113,7 +2476,7 @@ function updateMeasurements() {
 
   peakREl.textContent =
     formatDb(
-      peakRight
+      measuredPeakRight
     );
 
 
@@ -2125,174 +2488,8 @@ function updateMeasurements() {
 
   rmsREl.textContent =
     formatDb(
-      rmsRight
+      measuredRmsRight
     );
-
-
-  updateCalibration();
-
-}
-
-
-
-function passLabel(
-  passed
-) {
-
-  return (
-    `<span class="${passed ? "pass" : "fail"}">
-      ${passed ? "PASS" : "FAIL"}
-    </span>`
-  );
-
-}
-
-
-
-function updateCalibration() {
-
-  const filename =
-    fileInput.files[0]
-      ?.name
-      ?.toLowerCase() ||
-    "";
-
-
-  if (
-    !filename.includes(
-      "1khz_-18dbfs"
-    )
-  ) {
-
-    validationEl.innerHTML =
-      "";
-
-    return;
-
-  }
-
-
-  if (
-    measuredPeakLeft === null ||
-    measuredRmsLeft === null ||
-    !lastSpectrumResult
-  ) {
-
-    return;
-
-  }
-
-
-  const expectedPeak =
-    -18.0;
-
-
-  const expectedRms =
-    -21.0103;
-
-
-  const expectedFrequency =
-    1000.0;
-
-
-  const expectedSpectrum =
-    -18.0;
-
-
-  const peakError =
-    Math.abs(
-      measuredPeakLeft -
-      expectedPeak
-    );
-
-
-  const rmsError =
-    Math.abs(
-      measuredRmsLeft -
-      expectedRms
-    );
-
-
-  const frequencyError =
-    Math.abs(
-      lastSpectrumResult
-        .peakFrequency -
-      expectedFrequency
-    );
-
-
-  const spectrumError =
-    Math.abs(
-      lastSpectrumResult
-        .peakDb -
-      expectedSpectrum
-    );
-
-
-  const peakPass =
-    peakError <=
-    0.05;
-
-
-  const rmsPass =
-    rmsError <=
-    0.05;
-
-
-  const frequencyPass =
-    frequencyError <=
-    1.0;
-
-
-  /*
-    Tight enough to expose
-    a real calibration problem.
-
-    We can tighten this further
-    once verified across more
-    frequencies.
-  */
-
-  const spectrumPass =
-    spectrumError <=
-    0.10;
-
-
-  validationEl.innerHTML =
-    `
-    <strong>Calibration — 1 kHz / -18 dBFS</strong><br>
-
-    Peak:
-    expected -18.000 dBFS —
-    measured ${measuredPeakLeft.toFixed(3)} dBFS —
-    error ${peakError.toFixed(3)} dB —
-    ${passLabel(peakPass)}
-
-    <br>
-
-    RMS:
-    expected -21.010 dBFS —
-    measured ${measuredRmsLeft.toFixed(3)} dBFS —
-    error ${rmsError.toFixed(3)} dB —
-    ${passLabel(rmsPass)}
-
-    <br>
-
-    Frequency:
-    expected 1000.000 Hz —
-    measured ${lastSpectrumResult.peakFrequency.toFixed(3)} Hz —
-    error ${frequencyError.toFixed(3)} Hz —
-    ${passLabel(frequencyPass)}
-
-    <br>
-
-    Spectrum amplitude:
-    expected -18.000 dBFS —
-    measured ${lastSpectrumResult.peakDb.toFixed(3)} dBFS —
-    error ${spectrumError.toFixed(3)} dB —
-    ${passLabel(spectrumPass)}
-    `;
-
 }
 
 
@@ -2332,7 +2529,6 @@ async function loadFile(
 
       statusEl.textContent =
         "WAV decoded directly at source sample rate.";
-
     }
 
     catch (
@@ -2352,9 +2548,7 @@ async function loadFile(
 
       statusEl.textContent =
         "WAV decoded using browser fallback.";
-
     }
-
   }
 
   else {
@@ -2366,8 +2560,7 @@ async function loadFile(
 
 
     statusEl.textContent =
-      "Compressed audio decoded by browser. Analysis sample rate shown above.";
-
+      "Compressed audio decoded by browser.";
   }
 
 
@@ -2430,9 +2623,6 @@ async function loadFile(
   updateMeasurements();
 
 
-  updateSpectrumNow();
-
-
   if (
     currentObjectUrl
   ) {
@@ -2440,7 +2630,6 @@ async function loadFile(
     URL.revokeObjectURL(
       currentObjectUrl
     );
-
   }
 
 
@@ -2492,8 +2681,13 @@ async function loadFile(
     false;
 
 
+  player.currentTime = 0;
+
+
   updateTime();
 
+
+  updateSpectrumNow();
 }
 
 
@@ -2506,7 +2700,6 @@ function updateTime() {
     )} / ${formatTime(
       duration
     )}`;
-
 }
 
 
@@ -2524,7 +2717,6 @@ fileInput.addEventListener(
     ) {
 
       return;
-
     }
 
 
@@ -2533,7 +2725,6 @@ fileInput.addEventListener(
       await loadFile(
         file
       );
-
     }
 
     catch (
@@ -2551,9 +2742,7 @@ fileInput.addEventListener(
 
       statusEl.className =
         "status fail";
-
     }
-
   }
 );
 
@@ -2566,7 +2755,6 @@ playButton.addEventListener(
     try {
 
       await player.play();
-
     }
 
     catch (
@@ -2576,9 +2764,7 @@ playButton.addEventListener(
       console.error(
         error
       );
-
     }
-
   }
 );
 
@@ -2589,7 +2775,6 @@ pauseButton.addEventListener(
   () => {
 
     player.pause();
-
   }
 );
 
@@ -2611,7 +2796,6 @@ muteButton.addEventListener(
       muted
         ? "Unmute"
         : "Mute";
-
   }
 );
 
@@ -2636,7 +2820,6 @@ volumeSlider.addEventListener(
         value *
         100
       )}%`;
-
   }
 );
 
@@ -2656,7 +2839,6 @@ seekSlider.addEventListener(
 
 
     updateSpectrumNow();
-
   }
 );
 
@@ -2677,18 +2859,10 @@ player.addEventListener(
       performance.now();
 
 
-    /*
-      4x padded custom FFT is
-      heavier than the old analyser.
-
-      250 ms is plenty for this
-      measurement-oriented version.
-    */
-
     if (
       now -
       lastSpectrumUpdate >
-      250
+      150
     ) {
 
       lastSpectrumUpdate =
@@ -2696,9 +2870,7 @@ player.addEventListener(
 
 
       updateSpectrumNow();
-
     }
-
   }
 );
 
@@ -2709,7 +2881,16 @@ player.addEventListener(
   () => {
 
     updateSpectrumNow();
+  }
+);
 
+
+
+player.addEventListener(
+  "ended",
+  () => {
+
+    updateSpectrumNow();
   }
 );
 
