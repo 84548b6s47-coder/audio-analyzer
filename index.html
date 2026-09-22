@@ -14,11 +14,11 @@
       margin: 0;
       background: #0b0f14;
       color: #f5f7fa;
-      font-family: Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     .app {
-      max-width: 1500px;
+      width: min(1500px, 100%);
       margin: 0 auto;
       padding: 20px;
     }
@@ -36,7 +36,7 @@
       margin-top: 16px;
     }
 
-    .topbar {
+    .controls {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
@@ -45,60 +45,62 @@
 
     button {
       background: #1b2733;
-      color: white;
+      color: #ffffff;
       border: 1px solid #344556;
-      border-radius: 8px;
-      padding: 10px 14px;
+      border-radius: 7px;
+      padding: 9px 14px;
       cursor: pointer;
     }
 
     button:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
     }
 
-    .volume-control {
+    input[type="range"] {
+      accent-color: #d8ff4f;
+    }
+
+    .volume {
       display: flex;
       align-items: center;
+      gap: 8px;
+      margin-left: 6px;
+    }
+
+    .volume input {
+      width: 150px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
-      margin-left: 10px;
+      margin-top: 16px;
     }
 
-    .volume-control input {
-      width: 180px;
+    .metric {
+      background: #0b1118;
+      border: 1px solid #202b35;
+      border-radius: 8px;
+      padding: 10px;
     }
 
-    .info {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      margin-top: 14px;
-      color: #aab6c2;
-      font-size: 14px;
+    .metric-label {
+      color: #7f8e9c;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .metric-value {
+      font-size: 17px;
+      font-weight: 700;
     }
 
     .status {
       margin-top: 12px;
-      color: #8fa0b0;
+      color: #91a0ae;
       font-size: 13px;
-    }
-
-    .transport {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .transport input[type="range"] {
-      flex: 1;
-    }
-
-    .time {
-      color: #aab6c2;
-      font-size: 13px;
-      min-width: 100px;
-      text-align: right;
     }
 
     canvas {
@@ -108,16 +110,53 @@
       background: #070b10;
       border-radius: 8px;
     }
+
+    .transport {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    #seekSlider {
+      flex: 1;
+    }
+
+    #timeDisplay {
+      min-width: 105px;
+      text-align: right;
+      color: #aab6c2;
+      font-size: 13px;
+    }
+
+    .validation {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #9cacba;
+    }
+
+    .pass {
+      color: #b9f66e;
+    }
+
+    .warn {
+      color: #ffd166;
+    }
+
+    .error {
+      color: #ff7c7c;
+    }
   </style>
 </head>
 
 <body>
   <div class="app">
+
     <h1>Professional Audio Analyzer</h1>
 
     <div class="panel">
 
-      <div class="topbar">
+      <div class="controls">
 
         <input
           id="audioFile"
@@ -137,7 +176,8 @@
           Mute
         </button>
 
-        <div class="volume-control">
+        <div class="volume">
+
           <span>Volume</span>
 
           <input
@@ -153,37 +193,71 @@
           <strong id="volumeValue">
             100%
           </strong>
+
         </div>
 
       </div>
 
-      <div class="info">
 
-        <div>
-          Sample Rate:
-          <strong id="sampleRate">-</strong>
+      <div class="metrics">
+
+        <div class="metric">
+          <div class="metric-label">Source Sample Rate</div>
+          <div class="metric-value" id="sourceSampleRate">-</div>
         </div>
 
-        <div>
-          FFT Size:
-          <strong id="fftSize">32768</strong>
+        <div class="metric">
+          <div class="metric-label">Channels</div>
+          <div class="metric-value" id="channels">-</div>
         </div>
 
-        <div>
-          Nyquist:
-          <strong id="nyquist">-</strong>
+        <div class="metric">
+          <div class="metric-label">FFT Size</div>
+          <div class="metric-value" id="fftSize">32768</div>
         </div>
 
-        <div>
-          Duration:
-          <strong id="duration">-</strong>
+        <div class="metric">
+          <div class="metric-label">Nyquist</div>
+          <div class="metric-value" id="nyquist">-</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Duration</div>
+          <div class="metric-value" id="duration">-</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Peak L</div>
+          <div class="metric-value" id="peakL">-</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Peak R</div>
+          <div class="metric-value" id="peakR">-</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">RMS L</div>
+          <div class="metric-value" id="rmsL">-</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">RMS R</div>
+          <div class="metric-value" id="rmsR">-</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Spectrum Peak</div>
+          <div class="metric-value" id="spectrumPeak">-</div>
         </div>
 
       </div>
 
       <div class="status" id="status">
-        Load an MP3 or WAV file.
+        Load a WAV or MP3 file.
       </div>
+
+      <div class="validation" id="validation"></div>
 
     </div>
 
@@ -202,13 +276,13 @@
           id="seekSlider"
           type="range"
           min="0"
-          max="100"
+          max="1"
           value="0"
-          step="0.01"
+          step="0.001"
           disabled
         />
 
-        <div class="time" id="timeDisplay">
+        <div id="timeDisplay">
           0:00 / 0:00
         </div>
 
@@ -223,6 +297,12 @@
 
 
   <script>
+
+    const FFT_SIZE = 32768;
+    const MIN_FREQ = 20;
+    const MAX_FREQ = 20000;
+    const DISPLAY_MIN_DB = -100;
+    const DISPLAY_MAX_DB = 0;
 
     const fileInput =
       document.getElementById("audioFile");
@@ -251,11 +331,17 @@
     const timeDisplay =
       document.getElementById("timeDisplay");
 
-    const sampleRateEl =
-      document.getElementById("sampleRate");
+    const statusEl =
+      document.getElementById("status");
 
-    const fftSizeEl =
-      document.getElementById("fftSize");
+    const validationEl =
+      document.getElementById("validation");
+
+    const sourceSampleRateEl =
+      document.getElementById("sourceSampleRate");
+
+    const channelsEl =
+      document.getElementById("channels");
 
     const nyquistEl =
       document.getElementById("nyquist");
@@ -263,8 +349,20 @@
     const durationEl =
       document.getElementById("duration");
 
-    const statusEl =
-      document.getElementById("status");
+    const peakLEl =
+      document.getElementById("peakL");
+
+    const peakREl =
+      document.getElementById("peakR");
+
+    const rmsLEl =
+      document.getElementById("rmsL");
+
+    const rmsREl =
+      document.getElementById("rmsR");
+
+    const spectrumPeakEl =
+      document.getElementById("spectrumPeak");
 
     const canvas =
       document.getElementById("spectrumCanvas");
@@ -273,28 +371,69 @@
       canvas.getContext("2d");
 
 
-    const FFT_SIZE = 32768;
-
-    const MIN_FREQ = 20;
-
-    const MAX_FREQ = 20000;
-
-
-    let audioContext = null;
-
-    let analyser = null;
-
-    let sourceNode = null;
-
-    let outputGain = null;
-
     let currentObjectUrl = null;
 
-    let animationId = null;
+    let sampleRate = 0;
 
-    let isMuted = false;
+    let channelData = [];
 
-    let savedVolume = 1;
+    let monoData = null;
+
+    let duration = 0;
+
+    let muted = false;
+
+    let previousVolume = 1;
+
+    let lastSpectrumUpdate = 0;
+
+
+    function linearToDb(value) {
+
+      if (
+        !Number.isFinite(value) ||
+        value <= 0
+      ) {
+        return -Infinity;
+      }
+
+      return 20 * Math.log10(value);
+
+    }
+
+
+    function formatDb(value) {
+
+      if (!Number.isFinite(value)) {
+        return "-∞ dBFS";
+      }
+
+      return `${value.toFixed(2)} dBFS`;
+
+    }
+
+
+    function formatTime(seconds) {
+
+      if (!Number.isFinite(seconds)) {
+        return "0:00";
+      }
+
+      const minutes =
+        Math.floor(seconds / 60);
+
+      const secs =
+        Math.floor(seconds % 60);
+
+      return (
+        minutes +
+        ":" +
+        secs
+          .toString()
+          .padStart(2, "0")
+      );
+
+    }
 
 
     function freqToX(freq) {
@@ -305,7 +444,7 @@
       const maxLog =
         Math.log10(MAX_FREQ);
 
-      const value =
+      const normalized =
         (
           Math.log10(freq) -
           minLog
@@ -315,30 +454,36 @@
           minLog
         );
 
-      return value * canvas.width;
+      return normalized * canvas.width;
 
     }
 
 
     function dbToY(db) {
 
-      const minDb = -100;
-
-      const maxDb = 0;
-
       const clamped =
         Math.max(
-          minDb,
-          Math.min(maxDb, db)
+          DISPLAY_MIN_DB,
+          Math.min(
+            DISPLAY_MAX_DB,
+            db
+          )
         );
 
       const normalized =
-        (clamped - minDb) /
-        (maxDb - minDb);
+        (
+          clamped -
+          DISPLAY_MIN_DB
+        ) /
+        (
+          DISPLAY_MAX_DB -
+          DISPLAY_MIN_DB
+        );
 
       return (
         canvas.height -
-        normalized * canvas.height
+        normalized *
+        canvas.height
       );
 
     }
@@ -370,8 +515,7 @@
       );
 
 
-      const freqMarks = [
-
+      const frequencies = [
         20,
         30,
         50,
@@ -383,7 +527,6 @@
         5000,
         10000,
         20000
-
       ];
 
 
@@ -396,14 +539,14 @@
 
       for (
         const freq
-        of freqMarks
+        of frequencies
       ) {
 
         const x =
           freqToX(freq);
 
         ctx.strokeStyle =
-          "#1b2631";
+          "#1a2530";
 
         ctx.lineWidth = 1;
 
@@ -423,7 +566,7 @@
 
 
         ctx.fillStyle =
-          "#8090a0";
+          "#778795";
 
         const label =
           freq >= 1000
@@ -433,14 +576,13 @@
         ctx.fillText(
           label,
           x,
-          height - 8
+          height - 7
         );
 
       }
 
 
       const dbMarks = [
-
         0,
         -12,
         -24,
@@ -450,7 +592,6 @@
         -72,
         -84,
         -96
-
       ];
 
 
@@ -485,7 +626,7 @@
 
 
         ctx.fillStyle =
-          "#6f7f8f";
+          "#677887";
 
         ctx.fillText(
           `${db} dB`,
@@ -501,90 +642,953 @@
     }
 
 
-    function drawSpectrum() {
+    function calculatePeak(samples) {
+
+      let peak = 0;
+
+      for (
+        let i = 0;
+        i < samples.length;
+        i++
+      ) {
+
+        const value =
+          Math.abs(samples[i]);
+
+        if (
+          value > peak
+        ) {
+          peak = value;
+        }
+
+      }
+
+      return peak;
+
+    }
+
+
+    function calculateRms(samples) {
+
+      if (
+        samples.length === 0
+      ) {
+        return 0;
+      }
+
+      let sum = 0;
+
+      for (
+        let i = 0;
+        i < samples.length;
+        i++
+      ) {
+
+        const value =
+          samples[i];
+
+        sum +=
+          value * value;
+
+      }
+
+      return Math.sqrt(
+        sum /
+        samples.length
+      );
+
+    }
+
+
+    function buildMono() {
+
+      if (
+        channelData.length === 0
+      ) {
+        return null;
+      }
+
+      const length =
+        channelData[0].length;
+
+      const output =
+        new Float32Array(length);
+
+      if (
+        channelData.length === 1
+      ) {
+
+        output.set(
+          channelData[0]
+        );
+
+        return output;
+
+      }
+
+      for (
+        let i = 0;
+        i < length;
+        i++
+      ) {
+
+        output[i] =
+          0.5 *
+          (
+            channelData[0][i] +
+            channelData[1][i]
+          );
+
+      }
+
+      return output;
+
+    }
+
+
+    function parseWav(arrayBuffer) {
+
+      const view =
+        new DataView(arrayBuffer);
+
+      function readString(
+        offset,
+        length
+      ) {
+
+        let result = "";
+
+        for (
+          let i = 0;
+          i < length;
+          i++
+        ) {
+
+          result +=
+            String.fromCharCode(
+              view.getUint8(
+                offset + i
+              )
+            );
+
+        }
+
+        return result;
+
+      }
+
+
+      if (
+        readString(0, 4) !== "RIFF" ||
+        readString(8, 4) !== "WAVE"
+      ) {
+
+        throw new Error(
+          "Not a standard RIFF/WAVE file."
+        );
+
+      }
+
+
+      let offset = 12;
+
+      let audioFormat = null;
+
+      let numChannels = null;
+
+      let wavSampleRate = null;
+
+      let bitsPerSample = null;
+
+      let dataOffset = null;
+
+      let dataSize = null;
+
+
+      while (
+        offset + 8 <=
+        view.byteLength
+      ) {
+
+        const chunkId =
+          readString(
+            offset,
+            4
+          );
+
+        const chunkSize =
+          view.getUint32(
+            offset + 4,
+            true
+          );
+
+        const chunkDataOffset =
+          offset + 8;
+
+
+        if (
+          chunkId === "fmt "
+        ) {
+
+          audioFormat =
+            view.getUint16(
+              chunkDataOffset,
+              true
+            );
+
+          numChannels =
+            view.getUint16(
+              chunkDataOffset + 2,
+              true
+            );
+
+          wavSampleRate =
+            view.getUint32(
+              chunkDataOffset + 4,
+              true
+            );
+
+          bitsPerSample =
+            view.getUint16(
+              chunkDataOffset + 14,
+              true
+            );
+
+        }
+
+
+        if (
+          chunkId === "data"
+        ) {
+
+          dataOffset =
+            chunkDataOffset;
+
+          dataSize =
+            chunkSize;
+
+          break;
+
+        }
+
+
+        offset =
+          chunkDataOffset +
+          chunkSize +
+          (
+            chunkSize % 2
+          );
+
+      }
+
+
+      if (
+        dataOffset === null ||
+        audioFormat === null
+      ) {
+
+        throw new Error(
+          "Invalid or unsupported WAV structure."
+        );
+
+      }
+
+
+      const bytesPerSample =
+        bitsPerSample / 8;
+
+      const frameSize =
+        bytesPerSample *
+        numChannels;
+
+      const frameCount =
+        Math.floor(
+          dataSize /
+          frameSize
+        );
+
+
+      const channels =
+        Array.from(
+          {
+            length:
+              numChannels
+          },
+          () =>
+            new Float32Array(
+              frameCount
+            )
+        );
+
+
+      function readSample(
+        position
+      ) {
+
+        if (
+          audioFormat === 3 &&
+          bitsPerSample === 32
+        ) {
+
+          return view.getFloat32(
+            position,
+            true
+          );
+
+        }
+
+
+        if (
+          audioFormat !== 1
+        ) {
+
+          throw new Error(
+            `Unsupported WAV format: ${audioFormat}`
+          );
+
+        }
+
+
+        if (
+          bitsPerSample === 8
+        ) {
+
+          return (
+            view.getUint8(
+              position
+            ) -
+            128
+          ) / 128;
+
+        }
+
+
+        if (
+          bitsPerSample === 16
+        ) {
+
+          return (
+            view.getInt16(
+              position,
+              true
+            ) /
+            32768
+          );
+
+        }
+
+
+        if (
+          bitsPerSample === 24
+        ) {
+
+          let value =
+            view.getUint8(
+              position
+            ) |
+            (
+              view.getUint8(
+                position + 1
+              ) << 8
+            ) |
+            (
+              view.getUint8(
+                position + 2
+              ) << 16
+            );
+
+
+          if (
+            value & 0x800000
+          ) {
+
+            value |=
+              0xff000000;
+
+          }
+
+
+          return (
+            value /
+            8388608
+          );
+
+        }
+
+
+        if (
+          bitsPerSample === 32
+        ) {
+
+          return (
+            view.getInt32(
+              position,
+              true
+            ) /
+            2147483648
+          );
+
+        }
+
+
+        throw new Error(
+          `Unsupported WAV bit depth: ${bitsPerSample}`
+        );
+
+      }
+
+
+      let position =
+        dataOffset;
+
+
+      for (
+        let frame = 0;
+        frame < frameCount;
+        frame++
+      ) {
+
+        for (
+          let channel = 0;
+          channel < numChannels;
+          channel++
+        ) {
+
+          channels[channel][frame] =
+            readSample(
+              position
+            );
+
+          position +=
+            bytesPerSample;
+
+        }
+
+      }
+
+
+      return {
+        sampleRate:
+          wavSampleRate,
+
+        channels:
+          channels,
+
+        frameCount:
+          frameCount,
+
+        bitsPerSample:
+          bitsPerSample
+      };
+
+    }
+
+
+    async function decodeWithBrowser(
+      arrayBuffer
+    ) {
+
+      const context =
+        new AudioContext();
+
+      try {
+
+        const decoded =
+          await context.decodeAudioData(
+            arrayBuffer.slice(0)
+          );
+
+
+        const channels = [];
+
+        for (
+          let i = 0;
+          i < decoded.numberOfChannels;
+          i++
+        ) {
+
+          channels.push(
+            new Float32Array(
+              decoded.getChannelData(i)
+            )
+          );
+
+        }
+
+
+        return {
+          sampleRate:
+            decoded.sampleRate,
+
+          channels:
+            channels,
+
+          frameCount:
+            decoded.length,
+
+          browserDecoded:
+            true
+        };
+
+      }
+
+      finally {
+
+        await context.close();
+
+      }
+
+    }
+
+
+    function bitReverse(
+      real,
+      imag
+    ) {
+
+      const n =
+        real.length;
+
+      let j = 0;
+
+
+      for (
+        let i = 1;
+        i < n;
+        i++
+      ) {
+
+        let bit =
+          n >> 1;
+
+
+        while (
+          j & bit
+        ) {
+
+          j ^=
+            bit;
+
+          bit >>=
+            1;
+
+        }
+
+
+        j ^=
+          bit;
+
+
+        if (
+          i < j
+        ) {
+
+          let temp =
+            real[i];
+
+          real[i] =
+            real[j];
+
+          real[j] =
+            temp;
+
+
+          temp =
+            imag[i];
+
+          imag[i] =
+            imag[j];
+
+          imag[j] =
+            temp;
+
+        }
+
+      }
+
+    }
+
+
+    function fft(
+      real,
+      imag
+    ) {
+
+      const n =
+        real.length;
+
+
+      bitReverse(
+        real,
+        imag
+      );
+
+
+      for (
+        let length = 2;
+        length <= n;
+        length <<= 1
+      ) {
+
+        const half =
+          length >> 1;
+
+        const angle =
+          -2 *
+          Math.PI /
+          length;
+
+
+        const wLengthReal =
+          Math.cos(angle);
+
+        const wLengthImag =
+          Math.sin(angle);
+
+
+        for (
+          let start = 0;
+          start < n;
+          start += length
+        ) {
+
+          let wReal = 1;
+
+          let wImag = 0;
+
+
+          for (
+            let j = 0;
+            j < half;
+            j++
+          ) {
+
+            const even =
+              start + j;
+
+            const odd =
+              even + half;
+
+
+            const oddReal =
+              real[odd] *
+              wReal -
+              imag[odd] *
+              wImag;
+
+
+            const oddImag =
+              real[odd] *
+              wImag +
+              imag[odd] *
+              wReal;
+
+
+            const evenReal =
+              real[even];
+
+            const evenImag =
+              imag[even];
+
+
+            real[even] =
+              evenReal +
+              oddReal;
+
+
+            imag[even] =
+              evenImag +
+              oddImag;
+
+
+            real[odd] =
+              evenReal -
+              oddReal;
+
+
+            imag[odd] =
+              evenImag -
+              oddImag;
+
+
+            const nextWReal =
+              wReal *
+              wLengthReal -
+              wImag *
+              wLengthImag;
+
+
+            const nextWImag =
+              wReal *
+              wLengthImag +
+              wImag *
+              wLengthReal;
+
+
+            wReal =
+              nextWReal;
+
+            wImag =
+              nextWImag;
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+    function calculateSpectrum(
+      centerTime
+    ) {
+
+      if (
+        !monoData ||
+        !sampleRate
+      ) {
+        return null;
+      }
+
+
+      const startSample =
+        Math.max(
+          0,
+          Math.min(
+            monoData.length -
+            FFT_SIZE,
+            Math.floor(
+              centerTime *
+              sampleRate -
+              FFT_SIZE / 2
+            )
+          )
+        );
+
+
+      const real =
+        new Float64Array(
+          FFT_SIZE
+        );
+
+
+      const imag =
+        new Float64Array(
+          FFT_SIZE
+        );
+
+
+      let windowSum = 0;
+
+
+      for (
+        let i = 0;
+        i < FFT_SIZE;
+        i++
+      ) {
+
+        const window =
+          0.5 -
+          0.5 *
+          Math.cos(
+            2 *
+            Math.PI *
+            i /
+            (
+              FFT_SIZE -
+              1
+            )
+          );
+
+
+        windowSum +=
+          window;
+
+
+        const sampleIndex =
+          startSample + i;
+
+
+        const sample =
+          sampleIndex <
+          monoData.length
+            ? monoData[
+                sampleIndex
+              ]
+            : 0;
+
+
+        real[i] =
+          sample *
+          window;
+
+      }
+
+
+      fft(
+        real,
+        imag
+      );
+
+
+      const half =
+        FFT_SIZE / 2;
+
+
+      const frequencies =
+        new Float64Array(
+          half
+        );
+
+
+      const dbValues =
+        new Float64Array(
+          half
+        );
+
+
+      let peakDb =
+        -Infinity;
+
+      let peakFrequency =
+        0;
+
+
+      for (
+        let k = 1;
+        k < half;
+        k++
+      ) {
+
+        const frequency =
+          k *
+          sampleRate /
+          FFT_SIZE;
+
+
+        const magnitude =
+          Math.sqrt(
+            real[k] *
+            real[k] +
+            imag[k] *
+            imag[k]
+          );
+
+
+        /*
+          Single-sided sinusoidal
+          amplitude calibration.
+
+          For a bin-centered sine,
+          2 * magnitude / sum(window)
+          equals the original
+          peak amplitude.
+        */
+
+        const amplitude =
+          2 *
+          magnitude /
+          windowSum;
+
+
+        const db =
+          linearToDb(
+            amplitude
+          );
+
+
+        frequencies[k] =
+          frequency;
+
+        dbValues[k] =
+          db;
+
+
+        if (
+          Number.isFinite(db) &&
+          db > peakDb &&
+          frequency >= MIN_FREQ &&
+          frequency <= MAX_FREQ
+        ) {
+
+          peakDb =
+            db;
+
+          peakFrequency =
+            frequency;
+
+        }
+
+      }
+
+
+      return {
+        frequencies,
+        dbValues,
+        peakDb,
+        peakFrequency
+      };
+
+    }
+
+
+    function drawSpectrum(
+      spectrum
+    ) {
 
       drawGrid();
 
 
       if (
-        !analyser ||
-        !audioContext
+        !spectrum
       ) {
-
-        animationId =
-          requestAnimationFrame(
-            drawSpectrum
-          );
-
         return;
-
       }
-
-
-      const data =
-        new Float32Array(
-          analyser.frequencyBinCount
-        );
-
-
-      analyser.getFloatFrequencyData(
-        data
-      );
-
-
-      const sampleRate =
-        audioContext.sampleRate;
-
-
-      const binWidth =
-        sampleRate /
-        analyser.fftSize;
 
 
       const width =
         canvas.width;
 
 
-      const powerSum =
+      const pixelMax =
         new Float64Array(
           width
         );
 
 
-      const counts =
-        new Uint32Array(
-          width
-        );
+      pixelMax.fill(
+        -Infinity
+      );
 
 
       for (
         let i = 1;
-        i < data.length;
+        i <
+        spectrum.frequencies.length;
         i++
       ) {
 
         const frequency =
-          i * binWidth;
+          spectrum.frequencies[i];
 
 
         if (
-          frequency <
-          MIN_FREQ
+          frequency < MIN_FREQ
         ) {
           continue;
         }
 
 
         if (
-          frequency >
-          MAX_FREQ
+          frequency > MAX_FREQ
         ) {
           break;
         }
 
 
         const db =
-          data[i];
+          spectrum.dbValues[i];
 
 
         if (
@@ -603,114 +1607,15 @@
 
 
         if (
-          x < 0 ||
-          x >= width
-        ) {
-          continue;
-        }
-
-
-        const power =
-          Math.pow(
-            10,
-            db / 10
-          );
-
-
-        powerSum[x] +=
-          power;
-
-
-        counts[x]++;
-
-      }
-
-
-      const spectrum =
-        new Float64Array(
-          width
-        );
-
-
-      spectrum.fill(
-        -120
-      );
-
-
-      for (
-        let x = 0;
-        x < width;
-        x++
-      ) {
-
-        if (
-          counts[x] > 0
+          x >= 0 &&
+          x < width &&
+          db > pixelMax[x]
         ) {
 
-          const averagePower =
-            powerSum[x] /
-            counts[x];
-
-
-          spectrum[x] =
-            10 *
-            Math.log10(
-              averagePower
-            );
+          pixelMax[x] =
+            db;
 
         }
-
-      }
-
-
-      const smoothed =
-        new Float64Array(
-          width
-        );
-
-
-      const radius = 2;
-
-
-      for (
-        let x = 0;
-        x < width;
-        x++
-      ) {
-
-        let total = 0;
-
-        let count = 0;
-
-
-        for (
-          let offset = -radius;
-          offset <= radius;
-          offset++
-        ) {
-
-          const position =
-            x + offset;
-
-
-          if (
-            position >= 0 &&
-            position < width
-          ) {
-
-            total +=
-              spectrum[position];
-
-            count++;
-
-          }
-
-        }
-
-
-        smoothed[x] =
-          total /
-          count;
 
       }
 
@@ -718,15 +1623,15 @@
       ctx.strokeStyle =
         "#d8ff4f";
 
-
       ctx.lineWidth = 2;
-
 
       ctx.beginPath();
 
 
-      let started =
-        false;
+      let started = false;
+
+      let lastValidDb =
+        DISPLAY_MIN_DB;
 
 
       for (
@@ -735,14 +1640,24 @@
         x++
       ) {
 
-        const db =
-          smoothed[x];
+        let db =
+          pixelMax[x];
 
 
         if (
           !Number.isFinite(db)
         ) {
-          continue;
+
+          db =
+            lastValidDb;
+
+        }
+
+        else {
+
+          lastValidDb =
+            db;
+
         }
 
 
@@ -779,150 +1694,384 @@
       ctx.stroke();
 
 
-      animationId =
-        requestAnimationFrame(
-          drawSpectrum
-        );
+      if (
+        Number.isFinite(
+          spectrum.peakDb
+        )
+      ) {
+
+        spectrumPeakEl.textContent =
+          `${spectrum.peakFrequency.toFixed(1)} Hz / ${spectrum.peakDb.toFixed(2)} dBFS`;
+
+      }
 
     }
 
 
-    async function setupAudioGraph() {
+    function updateSpectrumNow() {
 
       if (
-        audioContext
+        !monoData
       ) {
         return;
       }
 
 
-      audioContext =
-        new AudioContext();
-
-
-      analyser =
-        audioContext.createAnalyser();
-
-
-      analyser.fftSize =
-        FFT_SIZE;
-
-
-      analyser.smoothingTimeConstant =
-        0.7;
-
-
-      outputGain =
-        audioContext.createGain();
-
-
-      outputGain.gain.value =
-        1;
-
-
-      sourceNode =
-        audioContext.createMediaElementSource(
-          player
+      const spectrum =
+        calculateSpectrum(
+          player.currentTime
         );
 
 
-      /*
-        IMPORTANT SIGNAL ROUTING
-
-        Analysis branch:
-
-        player
-          |
-          +----> analyser
-
-        Playback branch:
-
-        player
-          |
-          +----> outputGain
-                   |
-                   +----> speakers
-
-        Volume and mute affect ONLY
-        outputGain.
-
-        They DO NOT affect analyser.
-      */
-
-
-      sourceNode.connect(
-        analyser
+      drawSpectrum(
+        spectrum
       );
-
-
-      sourceNode.connect(
-        outputGain
-      );
-
-
-      outputGain.connect(
-        audioContext.destination
-      );
-
-
-      sampleRateEl.textContent =
-        `${audioContext.sampleRate} Hz`;
-
-
-      fftSizeEl.textContent =
-        analyser.fftSize;
-
-
-      nyquistEl.textContent =
-        `${
-          audioContext.sampleRate / 2
-        } Hz`;
 
     }
 
 
-    function formatTime(seconds) {
+    function updateMeasurements() {
 
       if (
-        !Number.isFinite(seconds)
+        channelData.length === 0
       ) {
-        return "0:00";
+        return;
       }
 
 
-      const mins =
-        Math.floor(
-          seconds / 60
+      const left =
+        channelData[0];
+
+
+      const right =
+        channelData.length > 1
+          ? channelData[1]
+          : channelData[0];
+
+
+      const peakLeft =
+        linearToDb(
+          calculatePeak(left)
         );
 
 
-      const secs =
-        Math.floor(
-          seconds % 60
+      const peakRight =
+        linearToDb(
+          calculatePeak(right)
         );
 
 
-      return (
-        mins +
-        ":" +
-        secs
-          .toString()
-          .padStart(
-            2,
-            "0"
-          )
+      const rmsLeft =
+        linearToDb(
+          calculateRms(left)
+        );
+
+
+      const rmsRight =
+        linearToDb(
+          calculateRms(right)
+        );
+
+
+      peakLEl.textContent =
+        formatDb(
+          peakLeft
+        );
+
+
+      peakREl.textContent =
+        formatDb(
+          peakRight
+        );
+
+
+      rmsLEl.textContent =
+        formatDb(
+          rmsLeft
+        );
+
+
+      rmsREl.textContent =
+        formatDb(
+          rmsRight
+        );
+
+
+      runCalibrationCheck(
+        peakLeft,
+        rmsLeft
       );
 
     }
 
 
-    function updateTimeDisplay() {
+    function runCalibrationCheck(
+      peakDb,
+      rmsDb
+    ) {
+
+      const filename =
+        fileInput.files[0]
+          ?.name
+          ?.toLowerCase() ||
+        "";
+
+
+      if (
+        filename.includes(
+          "1khz_-18dbfs"
+        )
+      ) {
+
+        const expectedPeak =
+          -18;
+
+        const expectedRms =
+          -21.0103;
+
+
+        const peakError =
+          Math.abs(
+            peakDb -
+            expectedPeak
+          );
+
+
+        const rmsError =
+          Math.abs(
+            rmsDb -
+            expectedRms
+          );
+
+
+        const peakPass =
+          peakError <
+          0.05;
+
+
+        const rmsPass =
+          rmsError <
+          0.05;
+
+
+        validationEl.innerHTML =
+          `
+          Calibration test:
+          Peak expected -18.00 dBFS,
+          measured ${peakDb.toFixed(3)} dBFS —
+          <span class="${peakPass ? "pass" : "error"}">
+            ${peakPass ? "PASS" : "FAIL"}
+          </span>
+          &nbsp; | &nbsp;
+          RMS expected -21.010 dBFS,
+          measured ${rmsDb.toFixed(3)} dBFS —
+          <span class="${rmsPass ? "pass" : "error"}">
+            ${rmsPass ? "PASS" : "FAIL"}
+          </span>
+          `;
+
+      }
+
+      else {
+
+        validationEl.textContent =
+          "";
+
+      }
+
+    }
+
+
+    async function loadFile(
+      file
+    ) {
+
+      statusEl.textContent =
+        "Reading audio data...";
+
+
+      const arrayBuffer =
+        await file.arrayBuffer();
+
+
+      let decoded;
+
+
+      if (
+        file.name
+          .toLowerCase()
+          .endsWith(".wav")
+      ) {
+
+        try {
+
+          decoded =
+            parseWav(
+              arrayBuffer
+            );
+
+
+          statusEl.textContent =
+            "WAV decoded directly at source sample rate.";
+
+        }
+
+        catch (
+          error
+        ) {
+
+          console.warn(
+            error
+          );
+
+
+          decoded =
+            await decodeWithBrowser(
+              arrayBuffer
+            );
+
+
+          statusEl.textContent =
+            "WAV decoded using browser fallback.";
+
+        }
+
+      }
+
+      else {
+
+        decoded =
+          await decodeWithBrowser(
+            arrayBuffer
+          );
+
+
+        statusEl.textContent =
+          "Compressed audio decoded by browser. Analysis sample rate shown below.";
+
+      }
+
+
+      sampleRate =
+        decoded.sampleRate;
+
+
+      channelData =
+        decoded.channels;
+
+
+      monoData =
+        buildMono();
+
+
+      duration =
+        decoded.frameCount /
+        sampleRate;
+
+
+      sourceSampleRateEl.textContent =
+        `${sampleRate} Hz`;
+
+
+      channelsEl.textContent =
+        channelData.length;
+
+
+      nyquistEl.textContent =
+        `${(
+          sampleRate / 2
+        ).toFixed(0)} Hz`;
+
+
+      durationEl.textContent =
+        `${duration.toFixed(2)} s`;
+
+
+      seekSlider.max =
+        duration;
+
+
+      seekSlider.value =
+        0;
+
+
+      updateMeasurements();
+
+
+      updateSpectrumNow();
+
+
+      if (
+        currentObjectUrl
+      ) {
+
+        URL.revokeObjectURL(
+          currentObjectUrl
+        );
+
+      }
+
+
+      currentObjectUrl =
+        URL.createObjectURL(
+          file
+        );
+
+
+      player.src =
+        currentObjectUrl;
+
+
+      player.volume =
+        Number(
+          volumeSlider.value
+        );
+
+
+      player.muted =
+        false;
+
+
+      muted =
+        false;
+
+
+      muteButton.textContent =
+        "Mute";
+
+
+      playButton.disabled =
+        false;
+
+
+      pauseButton.disabled =
+        false;
+
+
+      muteButton.disabled =
+        false;
+
+
+      volumeSlider.disabled =
+        false;
+
+
+      seekSlider.disabled =
+        false;
+
+
+      updateTime();
+
+    }
+
+
+    function updateTime() {
 
       timeDisplay.textContent =
         `${formatTime(
           player.currentTime
         )} / ${formatTime(
-          player.duration
+          duration
         )}`;
 
     }
@@ -930,7 +2079,7 @@
 
     fileInput.addEventListener(
       "change",
-      () => {
+      async () => {
 
         const file =
           fileInput.files[0];
@@ -943,93 +2092,31 @@
         }
 
 
-        if (
-          currentObjectUrl
-        ) {
+        try {
 
-          URL.revokeObjectURL(
-            currentObjectUrl
+          await loadFile(
+            file
           );
 
         }
 
+        catch (
+          error
+        ) {
 
-        currentObjectUrl =
-          URL.createObjectURL(
-            file
+          console.error(
+            error
           );
 
 
-        player.src =
-          currentObjectUrl;
+          statusEl.textContent =
+            `Analysis failed: ${error.message}`;
 
 
-        /*
-          IMPORTANT:
+          statusEl.className =
+            "status error";
 
-          Keep native MediaElement
-          volume permanently at 100%.
-
-          Analyzer therefore receives
-          the original playback signal.
-
-          Listening level is controlled
-          only with outputGain.
-        */
-
-
-        player.volume = 1;
-
-        player.muted = false;
-
-
-        statusEl.textContent =
-          `Loaded: ${file.name}`;
-
-
-        playButton.disabled =
-          false;
-
-
-        pauseButton.disabled =
-          false;
-
-
-        muteButton.disabled =
-          false;
-
-
-        volumeSlider.disabled =
-          false;
-
-
-        seekSlider.disabled =
-          false;
-
-      }
-    );
-
-
-    player.addEventListener(
-      "loadedmetadata",
-      async () => {
-
-        durationEl.textContent =
-          `${player.duration.toFixed(2)} s`;
-
-
-        seekSlider.max =
-          player.duration;
-
-
-        seekSlider.value =
-          0;
-
-
-        updateTimeDisplay();
-
-
-        await setupAudioGraph();
+        }
 
       }
     );
@@ -1039,20 +2126,21 @@
       "click",
       async () => {
 
-        await setupAudioGraph();
+        try {
 
-
-        if (
-          audioContext.state ===
-          "suspended"
-        ) {
-
-          await audioContext.resume();
+          await player.play();
 
         }
 
+        catch (
+          error
+        ) {
 
-        await player.play();
+          console.error(
+            error
+          );
+
+        }
 
       }
     );
@@ -1068,6 +2156,27 @@
     );
 
 
+    muteButton.addEventListener(
+      "click",
+      () => {
+
+        muted =
+          !muted;
+
+
+        player.muted =
+          muted;
+
+
+        muteButton.textContent =
+          muted
+            ? "Unmute"
+            : "Mute";
+
+      }
+    );
+
+
     volumeSlider.addEventListener(
       "input",
       () => {
@@ -1078,78 +2187,18 @@
           );
 
 
-        savedVolume =
+        previousVolume =
+          value;
+
+
+        player.volume =
           value;
 
 
         volumeValue.textContent =
-          `${
-            Math.round(
-              value * 100
-            )
-          }%`;
-
-
-        if (
-          outputGain &&
-          !isMuted
-        ) {
-
-          outputGain.gain.value =
-            value;
-
-        }
-
-      }
-    );
-
-
-    muteButton.addEventListener(
-      "click",
-      () => {
-
-        isMuted =
-          !isMuted;
-
-
-        if (
-          outputGain
-        ) {
-
-          outputGain.gain.value =
-            isMuted
-              ? 0
-              : savedVolume;
-
-        }
-
-
-        muteButton.textContent =
-          isMuted
-            ? "Unmute"
-            : "Mute";
-
-      }
-    );
-
-
-    player.addEventListener(
-      "timeupdate",
-      () => {
-
-        if (
-          !seekSlider.matches(
-            ":active"
-          )
-        ) {
-
-          seekSlider.value =
-            player.currentTime;
-
-        }
-
-
-        updateTimeDisplay();
+          `${Math.round(
+            value * 100
+          )}%`;
 
       }
     );
@@ -1165,15 +2214,58 @@
           );
 
 
-        updateTimeDisplay();
+        updateTime();
+
+        updateSpectrumNow();
+
+      }
+    );
+
+
+    player.addEventListener(
+      "timeupdate",
+      () => {
+
+        seekSlider.value =
+          player.currentTime;
+
+
+        updateTime();
+
+
+        const now =
+          performance.now();
+
+
+        if (
+          now -
+          lastSpectrumUpdate >
+          120
+        ) {
+
+          lastSpectrumUpdate =
+            now;
+
+
+          updateSpectrumNow();
+
+        }
+
+      }
+    );
+
+
+    player.addEventListener(
+      "seeked",
+      () => {
+
+        updateSpectrumNow();
 
       }
     );
 
 
     drawGrid();
-
-    drawSpectrum();
 
   </script>
 
