@@ -120,7 +120,7 @@
     .validation-title {
       color: #ffffff;
       font-weight: 700;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
 
     .pass {
@@ -181,17 +181,9 @@
         accept=".wav,.mp3,audio/*"
       />
 
-      <button id="playButton" disabled>
-        Play
-      </button>
-
-      <button id="pauseButton" disabled>
-        Pause
-      </button>
-
-      <button id="muteButton" disabled>
-        Mute
-      </button>
+      <button id="playButton" disabled>Play</button>
+      <button id="pauseButton" disabled>Pause</button>
+      <button id="muteButton" disabled>Mute</button>
 
       <div class="volume">
         <span>Volume</span>
@@ -206,12 +198,11 @@
           disabled
         />
 
-        <strong id="volumeValue">
-          100%
-        </strong>
+        <strong id="volumeValue">100%</strong>
       </div>
 
     </div>
+
 
     <div class="metrics">
 
@@ -318,9 +309,7 @@
 <script>
 
 const WINDOW_SIZE = 32768;
-
-const FFT_SIZE =
-  WINDOW_SIZE * 4;
+const FFT_SIZE = WINDOW_SIZE * 4;
 
 const MIN_FREQ = 20;
 const MAX_FREQ = 20000;
@@ -332,38 +321,21 @@ const SWEEP_START_FREQ = 20;
 const SWEEP_END_FREQ = 20000;
 
 
-const fileInput =
-  document.getElementById("audioFile");
+const fileInput = document.getElementById("audioFile");
+const player = document.getElementById("audioPlayer");
 
-const player =
-  document.getElementById("audioPlayer");
+const playButton = document.getElementById("playButton");
+const pauseButton = document.getElementById("pauseButton");
+const muteButton = document.getElementById("muteButton");
 
-const playButton =
-  document.getElementById("playButton");
+const volumeSlider = document.getElementById("volumeSlider");
+const volumeValue = document.getElementById("volumeValue");
 
-const pauseButton =
-  document.getElementById("pauseButton");
+const seekSlider = document.getElementById("seekSlider");
+const timeDisplay = document.getElementById("timeDisplay");
 
-const muteButton =
-  document.getElementById("muteButton");
-
-const volumeSlider =
-  document.getElementById("volumeSlider");
-
-const volumeValue =
-  document.getElementById("volumeValue");
-
-const seekSlider =
-  document.getElementById("seekSlider");
-
-const timeDisplay =
-  document.getElementById("timeDisplay");
-
-const statusEl =
-  document.getElementById("status");
-
-const validationEl =
-  document.getElementById("validation");
+const statusEl = document.getElementById("status");
+const validationEl = document.getElementById("validation");
 
 const sourceSampleRateEl =
   document.getElementById("sourceSampleRate");
@@ -433,9 +405,7 @@ function linearToDb(value) {
 
 function formatDb(value) {
 
-  if (
-    !Number.isFinite(value)
-  ) {
+  if (!Number.isFinite(value)) {
     return "-∞ dBFS";
   }
 
@@ -446,9 +416,7 @@ function formatDb(value) {
 
 function formatTime(seconds) {
 
-  if (
-    !Number.isFinite(seconds)
-  ) {
+  if (!Number.isFinite(seconds)) {
     return "0:00";
   }
 
@@ -461,9 +429,7 @@ function formatTime(seconds) {
   return (
     minutes +
     ":" +
-    secs
-      .toString()
-      .padStart(2, "0")
+    secs.toString().padStart(2, "0")
   );
 }
 
@@ -477,7 +443,7 @@ function freqToX(freq) {
   const maxLog =
     Math.log10(MAX_FREQ);
 
-  const normalized =
+  return (
     (
       Math.log10(freq) -
       minLog
@@ -485,9 +451,8 @@ function freqToX(freq) {
     (
       maxLog -
       minLog
-    );
-
-  return normalized * canvas.width;
+    )
+  ) * canvas.width;
 }
 
 
@@ -530,12 +495,14 @@ function drawGrid() {
   const height =
     canvas.height;
 
+
   ctx.clearRect(
     0,
     0,
     width,
     height
   );
+
 
   ctx.fillStyle =
     "#070b10";
@@ -549,7 +516,6 @@ function drawGrid() {
 
 
   const frequencies = [
-
     20,
     30,
     50,
@@ -561,7 +527,6 @@ function drawGrid() {
     5000,
     10000,
     20000
-
   ];
 
 
@@ -586,41 +551,28 @@ function drawGrid() {
     ctx.lineWidth = 1;
 
     ctx.beginPath();
-
-    ctx.moveTo(
-      x,
-      0
-    );
-
-    ctx.lineTo(
-      x,
-      height
-    );
-
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
     ctx.stroke();
 
 
     ctx.fillStyle =
       "#778795";
 
-
     const label =
       freq >= 1000
         ? `${freq / 1000}k`
         : `${freq}`;
-
 
     ctx.fillText(
       label,
       x,
       height - 7
     );
-
   }
 
 
   const dbMarks = [
-
     0,
     -12,
     -24,
@@ -630,7 +582,6 @@ function drawGrid() {
     -72,
     -84,
     -96
-
   ];
 
 
@@ -650,17 +601,8 @@ function drawGrid() {
       "#15202a";
 
     ctx.beginPath();
-
-    ctx.moveTo(
-      0,
-      y
-    );
-
-    ctx.lineTo(
-      width,
-      y
-    );
-
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
     ctx.stroke();
 
 
@@ -675,9 +617,7 @@ function drawGrid() {
         y - 4
       )
     );
-
   }
-
 }
 
 
@@ -693,16 +633,13 @@ function calculatePeak(samples) {
   ) {
 
     const value =
-      Math.abs(
-        samples[i]
-      );
+      Math.abs(samples[i]);
 
     if (
       value > peak
     ) {
       peak = value;
     }
-
   }
 
   return peak;
@@ -732,7 +669,6 @@ function calculateRms(samples) {
     sum +=
       value *
       value;
-
   }
 
   return Math.sqrt(
@@ -784,7 +720,6 @@ function buildMono() {
         channelData[0][i] +
         channelData[1][i]
       );
-
   }
 
   return output;
@@ -959,6 +894,7 @@ function parseWav(arrayBuffer) {
         length:
           numChannels
       },
+
       () =>
         new Float32Array(
           frameCount
@@ -1110,7 +1046,6 @@ function parseWav(arrayBuffer) {
 
 
   return {
-
     sampleRate:
       wavSampleRate,
 
@@ -1122,7 +1057,6 @@ function parseWav(arrayBuffer) {
 
     bitsPerSample:
       bitsPerSample
-
   };
 }
 
@@ -1160,7 +1094,6 @@ async function decodeWithBrowser(
 
 
     return {
-
       sampleRate:
         decoded.sampleRate,
 
@@ -1168,12 +1101,8 @@ async function decodeWithBrowser(
         channels,
 
       frameCount:
-        decoded.length,
-
-      browserDecoded:
-        true
+        decoded.length
     };
-
   }
 
   finally {
@@ -1278,14 +1207,10 @@ function fft(
       length;
 
     const wLengthReal =
-      Math.cos(
-        angle
-      );
+      Math.cos(angle);
 
     const wLengthImag =
-      Math.sin(
-        angle
-      );
+      Math.sin(angle);
 
 
     for (
@@ -1376,16 +1301,26 @@ function fft(
 
 
 function calculateSpectrum(
-  centerTime
+  requestedTime
 ) {
 
   if (
     !monoData ||
     !sampleRate
   ) {
-
     return null;
   }
+
+
+  const halfWindow =
+    WINDOW_SIZE / 2;
+
+
+  const requestedCenterSample =
+    Math.round(
+      requestedTime *
+      sampleRate
+    );
 
 
   const maxStart =
@@ -1396,30 +1331,43 @@ function calculateSpectrum(
     );
 
 
-  const requestedStart =
-    Math.floor(
-      centerTime *
-      sampleRate -
-      WINDOW_SIZE /
-      2
-    );
+  let startSample =
+    requestedCenterSample -
+    halfWindow;
 
 
-  const startSample =
-    Math.max(
-      0,
-      Math.min(
-        maxStart,
-        requestedStart
-      )
-    );
+  let edgeAdjusted =
+    false;
+
+
+  if (
+    startSample < 0
+  ) {
+
+    startSample = 0;
+    edgeAdjusted = true;
+  }
+
+
+  if (
+    startSample >
+    maxStart
+  ) {
+
+    startSample =
+      maxStart;
+
+    edgeAdjusted = true;
+  }
+
+
+  const effectiveCenterSample =
+    startSample +
+    halfWindow;
 
 
   const effectiveCenterTime =
-    (
-      startSample +
-      WINDOW_SIZE / 2
-    ) /
+    effectiveCenterSample /
     sampleRate;
 
 
@@ -1594,65 +1542,74 @@ function calculateSpectrum(
       ];
 
 
+    const denominator =
+      y1 -
+      2 * y2 +
+      y3;
+
+
     if (
-      Number.isFinite(y1) &&
-      Number.isFinite(y2) &&
-      Number.isFinite(y3)
+      Number.isFinite(
+        denominator
+      ) &&
+      Math.abs(
+        denominator
+      ) >
+      1e-12
     ) {
 
-      const denominator =
-        y1 -
-        2 * y2 +
-        y3;
+      const delta =
+        0.5 *
+        (
+          y1 -
+          y3
+        ) /
+        denominator;
 
 
-      if (
-        Math.abs(
-          denominator
-        ) >
-        1e-12
-      ) {
-
-        const delta =
-          0.5 *
-          (
-            y1 -
-            y3
-          ) /
-          denominator;
+      peakFrequency =
+        (
+          peakBin +
+          delta
+        ) *
+        sampleRate /
+        FFT_SIZE;
 
 
-        peakFrequency =
-          (
-            peakBin +
-            delta
-          ) *
-          sampleRate /
-          FFT_SIZE;
-
-
-        peakDb =
-          y2 -
-          0.25 *
-          (
-            y1 -
-            y3
-          ) *
-          delta;
-      }
+      peakDb =
+        y2 -
+        0.25 *
+        (
+          y1 -
+          y3
+        ) *
+        delta;
     }
   }
 
 
   return {
 
-    frequencies,
-    dbValues,
+    frequencies:
+      frequencies,
 
-    peakDb,
-    peakFrequency,
+    dbValues:
+      dbValues,
 
-    effectiveCenterTime
+    peakDb:
+      peakDb,
+
+    peakFrequency:
+      peakFrequency,
+
+    requestedTime:
+      requestedTime,
+
+    effectiveCenterTime:
+      effectiveCenterTime,
+
+    edgeAdjusted:
+      edgeAdjusted
   };
 }
 
@@ -1665,9 +1622,7 @@ function drawSpectrum(
   drawGrid();
 
 
-  if (
-    !spectrum
-  ) {
+  if (!spectrum) {
     return;
   }
 
@@ -1789,9 +1744,7 @@ function drawSpectrum(
       dbToY(db);
 
 
-    if (
-      !started
-    ) {
+    if (!started) {
 
       ctx.moveTo(
         x,
@@ -1820,7 +1773,7 @@ function drawSpectrum(
 
 
 
-function estimateSweepFrequencyFromZeroCrossings(
+function estimateFrequencyFromZeroCrossings(
   time
 ) {
 
@@ -1828,22 +1781,29 @@ function estimateSweepFrequencyFromZeroCrossings(
     !monoData ||
     !sampleRate
   ) {
-
     return null;
   }
 
 
   const center =
-    Math.floor(
+    Math.round(
       time *
       sampleRate
     );
 
 
-  const searchRadius =
-    Math.floor(
+  /*
+    Local area only.
+
+    We want instantaneous/local
+    sweep frequency, not an
+    average over a large section.
+  */
+
+  const radius =
+    Math.round(
       sampleRate *
-      0.35
+      0.12
     );
 
 
@@ -1851,7 +1811,7 @@ function estimateSweepFrequencyFromZeroCrossings(
     Math.max(
       1,
       center -
-      searchRadius
+      radius
     );
 
 
@@ -1859,7 +1819,7 @@ function estimateSweepFrequencyFromZeroCrossings(
     Math.min(
       monoData.length - 1,
       center +
-      searchRadius
+      radius
     );
 
 
@@ -1868,12 +1828,14 @@ function estimateSweepFrequencyFromZeroCrossings(
 
   for (
     let i = start;
-    i < end;
+    i <= end;
     i++
   ) {
 
     const previous =
-      monoData[i - 1];
+      monoData[
+        i - 1
+      ];
 
     const current =
       monoData[i];
@@ -1915,14 +1877,14 @@ function estimateSweepFrequencyFromZeroCrossings(
 
 
   if (
-    crossings.length < 3
+    crossings.length < 2
   ) {
-
     return null;
   }
 
 
-  let nearestIndex = 0;
+  let nearest =
+    0;
 
   let nearestDistance =
     Infinity;
@@ -1949,79 +1911,103 @@ function estimateSweepFrequencyFromZeroCrossings(
       nearestDistance =
         distance;
 
-      nearestIndex =
+      nearest =
         i;
     }
   }
 
 
-  const periods = [];
-
-
-  const first =
-    Math.max(
-      1,
-      nearestIndex - 2
-    );
-
-
-  const last =
-    Math.min(
-      crossings.length - 1,
-      nearestIndex + 2
-    );
+  const localPeriods = [];
 
 
   for (
-    let i = first;
-    i <= last;
-    i++
+    let offset = -3;
+    offset <= 3;
+    offset++
   ) {
 
-    const period =
-      crossings[i] -
-      crossings[i - 1];
+    const index =
+      nearest +
+      offset;
 
 
     if (
-      period > 0
+      index > 0 &&
+      index <
+      crossings.length
     ) {
 
-      periods.push(
-        period
-      );
+      const period =
+        crossings[index] -
+        crossings[index - 1];
+
+
+      if (
+        period > 0
+      ) {
+
+        localPeriods.push(
+          period
+        );
+      }
     }
   }
 
 
   if (
-    periods.length === 0
+    localPeriods.length === 0
   ) {
-
     return null;
   }
 
 
-  periods.sort(
+  localPeriods.sort(
     (a, b) =>
       a - b
   );
 
 
-  const median =
-    periods[
-      Math.floor(
-        periods.length /
-        2
-      )
-    ];
+  const middle =
+    Math.floor(
+      localPeriods.length /
+      2
+    );
+
+
+  let medianPeriod;
+
+
+  if (
+    localPeriods.length %
+    2 === 0
+  ) {
+
+    medianPeriod =
+      (
+        localPeriods[
+          middle - 1
+        ] +
+        localPeriods[
+          middle
+        ]
+      ) /
+      2;
+  }
+
+  else {
+
+    medianPeriod =
+      localPeriods[
+        middle
+      ];
+  }
 
 
   if (
     !Number.isFinite(
-      median
+      medianPeriod
     ) ||
-    median <= 0
+    medianPeriod <= 0
   ) {
 
     return null;
@@ -2030,7 +2016,7 @@ function estimateSweepFrequencyFromZeroCrossings(
 
   return (
     sampleRate /
-    median
+    medianPeriod
   );
 }
 
@@ -2043,18 +2029,16 @@ function expectedSweepFrequency(
   if (
     duration <= 0
   ) {
-
     return null;
   }
 
 
-  const normalizedTime =
+  const clampedTime =
     Math.max(
       0,
       Math.min(
-        1,
-        time /
-        duration
+        duration,
+        time
       )
     );
 
@@ -2064,7 +2048,8 @@ function expectedSweepFrequency(
     Math.pow(
       SWEEP_END_FREQ /
       SWEEP_START_FREQ,
-      normalizedTime
+      clampedTime /
+      duration
     )
   );
 }
@@ -2272,14 +2257,21 @@ function updateValidation() {
     isSweepFile()
   ) {
 
+    /*
+      IMPORTANT FIX:
+
+      Expected and measured frequency
+      now use the ACTUAL center time
+      of the FFT window.
+
+      At file edges, the FFT window
+      cannot be centered on playback
+      time, so it is shifted inward.
+    */
+
     const analysisTime =
-      Math.max(
-        0,
-        Math.min(
-          duration,
-          player.currentTime
-        )
-      );
+      lastSpectrumResult
+        .effectiveCenterTime;
 
 
     const expected =
@@ -2289,7 +2281,7 @@ function updateValidation() {
 
 
     const measured =
-      estimateSweepFrequencyFromZeroCrossings(
+      estimateFrequencyFromZeroCrossings(
         analysisTime
       );
 
@@ -2306,7 +2298,7 @@ function updateValidation() {
       validationEl.innerHTML =
         `
         <div class="validation-title">
-          Log Sweep Validation
+          Log Sweep Tracking
         </div>
 
         Measurement unavailable at this position.
@@ -2331,8 +2323,36 @@ function updateValidation() {
       100;
 
 
+    /*
+      This is a practical validation
+      tolerance for this sweep tracker.
+
+      It is NOT claiming probability.
+    */
+
     const pass =
       errorPercent <= 2;
+
+
+    let edgeMessage =
+      "";
+
+
+    if (
+      lastSpectrumResult
+        .edgeAdjusted
+    ) {
+
+      edgeMessage =
+        `
+        <br>
+        <span class="info">
+          Edge-safe analysis:
+          playback is at ${lastSpectrumResult.requestedTime.toFixed(3)} s,
+          but the full FFT window is centered at ${analysisTime.toFixed(3)} s.
+        </span>
+        `;
+    }
 
 
     validationEl.innerHTML =
@@ -2341,8 +2361,13 @@ function updateValidation() {
         Log Sweep Tracking
       </div>
 
-      Time:
-      ${analysisTime.toFixed(3)} s
+      Playback time:
+      ${lastSpectrumResult.requestedTime.toFixed(3)} s
+
+      <br>
+
+      Actual analysis-center time:
+      <strong>${analysisTime.toFixed(3)} s</strong>
 
       <br>
 
@@ -2358,21 +2383,22 @@ function updateValidation() {
 
       Error:
       ${errorHz.toFixed(2)} Hz
-      (${errorPercent.toFixed(2)}%)
+      (${errorPercent.toFixed(3)}%)
 
       —
       ${passLabel(pass)}
 
       <br>
 
-      FFT peak currently displayed:
+      FFT peak display:
       ${lastSpectrumResult.peakFrequency.toFixed(2)} Hz
+
+      ${edgeMessage}
 
       <br>
 
       <span class="info">
-        Sweep amplitude is not graded against -18 dBFS because
-        a changing-frequency chirp spreads energy across multiple FFT bins.
+        Sweep amplitude is intentionally not graded as a steady-sine amplitude test.
       </span>
       `;
 
@@ -2388,10 +2414,7 @@ function updateValidation() {
 
 function updateSpectrumNow() {
 
-  if (
-    !monoData
-  ) {
-
+  if (!monoData) {
     return;
   }
 
@@ -2421,7 +2444,6 @@ function updateMeasurements() {
   if (
     channelData.length === 0
   ) {
-
     return;
   }
 
@@ -2681,7 +2703,8 @@ async function loadFile(
     false;
 
 
-  player.currentTime = 0;
+  player.currentTime =
+    0;
 
 
   updateTime();
@@ -2712,10 +2735,7 @@ fileInput.addEventListener(
       fileInput.files[0];
 
 
-    if (
-      !file
-    ) {
-
+    if (!file) {
       return;
     }
 
@@ -2817,8 +2837,7 @@ volumeSlider.addEventListener(
 
     volumeValue.textContent =
       `${Math.round(
-        value *
-        100
+        value * 100
       )}%`;
   }
 );
