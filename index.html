@@ -3,9 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Audio Analyzer</title>
+  <title>Professional Audio Analyzer</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       background: #0b0f14;
@@ -14,34 +18,70 @@
     }
 
     .app {
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 20px;
     }
 
     h1 {
-      margin-top: 0;
+      margin: 0 0 16px;
       font-size: 28px;
     }
 
     .panel {
       background: #111820;
       border: 1px solid #26313d;
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 20px;
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
     }
 
-    .spectrum {
-      height: 420px;
+    .topbar {
       display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
       align-items: center;
-      justify-content: center;
-      color: #7f8b99;
-      font-size: 18px;
     }
 
-    input[type="file"] {
+    button {
+      background: #1b2733;
+      color: white;
+      border: 1px solid #344556;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 14px;
+      color: #aab6c2;
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 12px;
+      color: #8fa0b0;
+      font-size: 13px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 520px;
+      display: block;
+      background: #070b10;
+      border-radius: 8px;
+    }
+
+    audio {
+      width: 100%;
       margin-top: 12px;
     }
   </style>
@@ -52,26 +92,234 @@
     <h1>Professional Audio Analyzer</h1>
 
     <div class="panel">
-      <strong>Load audio file</strong><br />
-      <input id="audioFile" type="file" accept=".wav,.mp3,audio/*" />
+      <div class="topbar">
+        <input id="audioFile" type="file" accept=".wav,.mp3,audio/*" />
+        <button id="playButton" disabled>Play</button>
+        <button id="pauseButton" disabled>Pause</button>
+      </div>
+
+      <div class="info">
+        <div>Sample Rate: <strong id="sampleRate">-</strong></div>
+        <div>FFT Size: <strong id="fftSize">32768</strong></div>
+        <div>Nyquist: <strong id="nyquist">-</strong></div>
+        <div>Duration: <strong id="duration">-</strong></div>
+      </div>
+
+      <div class="status" id="status">
+        Load an MP3 or WAV file.
+      </div>
     </div>
 
-    <div class="panel spectrum">
-      Spectrum Analyzer
+    <div class="panel">
+      <canvas id="spectrumCanvas" width="1400" height="520"></canvas>
+      <audio id="audioPlayer" controls></audio>
     </div>
   </div>
 
   <script>
-    const audioFile = document.getElementById("audioFile");
+    const fileInput = document.getElementById("audioFile");
+    const player = document.getElementById("audioPlayer");
+    const playButton = document.getElementById("playButton");
+    const pauseButton = document.getElementById("pauseButton");
 
-    audioFile.addEventListener("change", () => {
-      const file = audioFile.files[0];
+    const sampleRateEl = document.getElementById("sampleRate");
+    const fftSizeEl = document.getElementById("fftSize");
+    const nyquistEl = document.getElementById("nyquist");
+    const durationEl = document.getElementById("duration");
+    const statusEl = document.getElementById("status");
+
+    const canvas = document.getElementById("spectrumCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const FFT_SIZE = 32768;
+    const MIN_FREQ = 20;
+    const MAX_FREQ = 20000;
+
+    let audioContext = null;
+    let analyser = null;
+    let sourceNode = null;
+    let animationId = null;
+    let currentObjectUrl = null;
+
+    function freqToX(freq) {
+      const minLog = Math.log10(MIN_FREQ);
+      const maxLog = Math.log10(MAX_FREQ);
+      const value = (Math.log10(freq) - minLog) / (maxLog - minLog);
+
+      return value * canvas.width;
+    }
+
+    function dbToY(db) {
+      const minDb = -100;
+      const maxDb = 0;
+
+      const clamped = Math.max(minDb, Math.min(maxDb, db));
+      const normalized = (clamped - minDb) / (maxDb - minDb);
+
+      return canvas.height - normalized * canvas.height;
+    }
+
+    function drawGrid() {
+      const width = canvas.width;
+      const height = canvas.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.fillStyle = "#070b10";
+      ctx.fillRect(0, 0, width, height);
+
+      const freqMarks = [
+        20, 30, 50, 100, 200, 500,
+        1000, 2000, 5000, 10000, 20000
+      ];
+
+      ctx.font = "12px Arial";
+      ctx.textAlign = "center";
+
+      for (const freq of freqMarks) {
+        const x = freqToX(freq);
+
+        ctx.strokeStyle = "#1b2631";
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+
+        ctx.fillStyle = "#8090a0";
+
+        const label =
+          freq >= 1000
+            ? `${freq / 1000}k`
+            : `${freq}`;
+
+        ctx.fillText(label, x, height - 8);
+      }
+
+      const dbMarks = [0, -12, -24, -36, -48, -60, -72, -84, -96];
+
+      ctx.textAlign = "left";
+
+      for (const db of dbMarks) {
+        const y = dbToY(db);
+
+        ctx.strokeStyle = "#15202a";
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+
+        ctx.fillStyle = "#6f7f8f";
+        ctx.fillText(`${db} dB`, 6, Math.max(12, y - 4));
+      }
+    }
+
+    function drawSpectrum() {
+      drawGrid();
+
+      if (!analyser || !audioContext) {
+        animationId = requestAnimationFrame(drawSpectrum);
+        return;
+      }
+
+      const data = new Float32Array(analyser.frequencyBinCount);
+      analyser.getFloatFrequencyData(data);
+
+      const sampleRate = audioContext.sampleRate;
+      const binWidth = sampleRate / analyser.fftSize;
+
+      ctx.strokeStyle = "#d8ff4f";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      let started = false;
+
+      for (let i = 1; i < data.length; i++) {
+        const frequency = i * binWidth;
+
+        if (frequency < MIN_FREQ) continue;
+        if (frequency > MAX_FREQ) break;
+
+        const db = data[i];
+
+        if (!Number.isFinite(db)) continue;
+
+        const x = freqToX(frequency);
+        const y = dbToY(db);
+
+        if (!started) {
+          ctx.moveTo(x, y);
+          started = true;
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+
+      ctx.stroke();
+
+      animationId = requestAnimationFrame(drawSpectrum);
+    }
+
+    async function setupAudioGraph() {
+      if (!audioContext) {
+        audioContext = new AudioContext();
+
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = FFT_SIZE;
+        analyser.smoothingTimeConstant = 0.7;
+
+        sourceNode = audioContext.createMediaElementSource(player);
+
+        sourceNode.connect(analyser);
+        analyser.connect(audioContext.destination);
+      }
+
+      sampleRateEl.textContent = `${audioContext.sampleRate} Hz`;
+      fftSizeEl.textContent = analyser.fftSize;
+      nyquistEl.textContent = `${audioContext.sampleRate / 2} Hz`;
+    }
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
 
       if (!file) return;
 
-      console.log("Loaded:", file.name);
-      alert("Loaded: " + file.name);
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+      }
+
+      currentObjectUrl = URL.createObjectURL(file);
+      player.src = currentObjectUrl;
+
+      statusEl.textContent = `Loaded: ${file.name}`;
+
+      playButton.disabled = false;
+      pauseButton.disabled = false;
     });
+
+    player.addEventListener("loadedmetadata", async () => {
+      durationEl.textContent = `${player.duration.toFixed(2)} s`;
+      await setupAudioGraph();
+    });
+
+    playButton.addEventListener("click", async () => {
+      await setupAudioGraph();
+
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
+
+      await player.play();
+    });
+
+    pauseButton.addEventListener("click", () => {
+      player.pause();
+    });
+
+    drawGrid();
+    drawSpectrum();
   </script>
 </body>
 </html>
