@@ -230,11 +230,10 @@
       const sampleRate = audioContext.sampleRate;
       const binWidth = sampleRate / analyser.fftSize;
 
-      ctx.strokeStyle = "#d8ff4f";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
+      const width = canvas.width;
 
-      let started = false;
+      const powerSum = new Float64Array(width);
+      const counts = new Uint32Array(width);
 
       for (let i = 1; i < data.length; i++) {
         const frequency = i * binWidth;
@@ -246,7 +245,56 @@
 
         if (!Number.isFinite(db)) continue;
 
-        const x = freqToX(frequency);
+        const x = Math.floor(freqToX(frequency));
+
+        if (x < 0 || x >= width) continue;
+
+        const power = Math.pow(10, db / 10);
+
+        powerSum[x] += power;
+        counts[x]++;
+      }
+
+      const spectrum = new Float64Array(width);
+      spectrum.fill(-120);
+
+      for (let x = 0; x < width; x++) {
+        if (counts[x] > 0) {
+          const averagePower = powerSum[x] / counts[x];
+          spectrum[x] = 10 * Math.log10(averagePower);
+        }
+      }
+
+      const smoothed = new Float64Array(width);
+      const radius = 2;
+
+      for (let x = 0; x < width; x++) {
+        let total = 0;
+        let count = 0;
+
+        for (let offset = -radius; offset <= radius; offset++) {
+          const position = x + offset;
+
+          if (position >= 0 && position < width) {
+            total += spectrum[position];
+            count++;
+          }
+        }
+
+        smoothed[x] = total / count;
+      }
+
+      ctx.strokeStyle = "#d8ff4f";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      let started = false;
+
+      for (let x = 0; x < width; x++) {
+        const db = smoothed[x];
+
+        if (!Number.isFinite(db)) continue;
+
         const y = dbToY(db);
 
         if (!started) {
